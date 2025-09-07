@@ -9,13 +9,13 @@
 
 ---
 
-## 🌍 Project Overview
+## Project Overview
 
 This independent research project investigates the novel hypothesis that Earth's gravitational field variations may correlate with exceptional human longevity patterns observed in Blue Zone regions. Blue Zones are five geographic regions where people live measurably longer lives: **Sardinia (Italy)**, **Okinawa (Japan)**, **Nicoya Peninsula (Costa Rica)**, **Ikaria (Greece)**, and **Loma Linda (California, USA)**.
 
 While the primary gravitational hypothesis was ultimately rejected (r=-0.052, p=0.561), the research successfully identified and quantified actionable determinants of longevity, providing evidence-based guidance for public health interventions.
 
-### 🎯 Key Research Questions
+### Key Research Questions
 
 1. Do Earth's gravitational field variations correlate with Blue Zone longevity patterns?
 2. What factors distinguish Blue Zones from other regions globally?
@@ -24,7 +24,7 @@ While the primary gravitational hypothesis was ultimately rejected (r=-0.052, p=
 
 ---
 
-## 📊 Major Findings
+## Major Findings
 
 ### Primary Results
 
@@ -39,7 +39,7 @@ While the primary gravitational hypothesis was ultimately rejected (r=-0.052, p=
 
 ### Actionable vs Non-Actionable Factors
 
-**✅ Actionable (Modifiable) Factors:**
+**Actionable (Modifiable) Factors:**
 - Healthcare access (strongest predictor: r=0.72)
 - Education levels (r=0.68)
 - Social support systems (r=0.61)
@@ -47,7 +47,7 @@ While the primary gravitational hypothesis was ultimately rejected (r=-0.052, p=
 - Income inequality (r=-0.49)
 - Green space access (r=0.48)
 
-**❌ Non-Actionable (Fixed) Factors:**
+**Non-Actionable (Fixed) Factors:**
 - Gravity deviation (r=-0.052)
 - Latitude (r=0.029)
 - Elevation (r=0.082)
@@ -64,7 +64,7 @@ While the primary gravitational hypothesis was ultimately rejected (r=-0.052, p=
 
 ---
 
-## 🔬 Methodology
+## Methodology
 
 ### Data Architecture
 
@@ -104,7 +104,7 @@ The project employs a comprehensive multi-modal analysis pipeline:
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 Blue_Zones/
@@ -167,7 +167,7 @@ Blue_Zones/
 
 ---
 
-## 🚀 Getting Started
+## Getting Started
 
 ### Prerequisites
 
@@ -202,7 +202,7 @@ pip install -r requirements.txt
 
 ---
 
-## 💻 Running the Analysis
+## Running the Analysis
 
 ### Sequential Notebook Execution
 
@@ -231,7 +231,7 @@ print("Healthcare Correlation: r=0.72 (highly significant)")
 
 ---
 
-## 🏆 Technical Achievements
+## Technical Achievements
 
 ### Machine Learning Performance
 
@@ -266,7 +266,7 @@ print("Healthcare Correlation: r=0.72 (highly significant)")
 
 ---
 
-## 🌟 Scientific Contributions
+## Scientific Contributions
 
 1. **First Systematic Investigation**: Novel gravity-longevity hypothesis testing
 2. **Transparent Negative Findings**: Gravity hypothesis rejected with full transparency
@@ -276,7 +276,7 @@ print("Healthcare Correlation: r=0.72 (highly significant)")
 
 ---
 
-## 📚 Publications and Documentation
+## Publications and Documentation
 
 - **[Research Paper](./Blue_Zones_Research_Paper.md)**: Full independent research paper with methodology and findings
 - **[Technical Documentation](./Blue_Zones_Complete_Capstone_Paper.md)**: Extended technical implementation details
@@ -284,7 +284,7 @@ print("Healthcare Correlation: r=0.72 (highly significant)")
 
 ---
 
-## 🔮 Future Directions
+## Future Directions
 
 1. **Longitudinal Studies**: Track Blue Zone characteristics over 20+ years
 2. **Intervention Trials**: Test identified factors in pilot communities
@@ -296,7 +296,7 @@ print("Healthcare Correlation: r=0.72 (highly significant)")
 
 ---
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
 - **Dan Buettner** and National Geographic for Blue Zones identification
 - **International Gravimetric Bureau** for gravitational field data
@@ -310,4 +310,4 @@ print("Healthcare Correlation: r=0.72 (highly significant)")
 
 *Last Updated: September 2025*
 
-**Research Status:** ✅ Complete | **Primary Hypothesis:** ❌ Rejected | **Scientific Value:** ✅ High | **Policy Impact:** ✅ Actionable
+**Research Status:** Complete | **Primary Hypothesis:** Rejected | **Scientific Value:** High | **Policy Impact:** Actionable
