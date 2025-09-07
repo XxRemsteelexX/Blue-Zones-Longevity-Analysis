@@ -294,21 +294,6 @@ print("Healthcare Correlation: r=0.72 (highly significant)")
 
 ---
 
-## 📖 Citation
-
-If you use this research, please cite:
-
-```bibtex
-@misc{bluezones2025,
-  author = {[Your Name]},
-  title = {Investigating Gravitational Field Variations and Human Longevity Patterns in Blue Zone Regions},
-  year = {2025},
-  publisher = {GitHub},
-  journal = {Independent Research},
-  url = {https://github.com/[username]/blue-zones-research}
-}
-```
-
 ---
 
 ## 🙏 Acknowledgments
