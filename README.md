@@ -133,8 +133,7 @@ Blue_Zones/
 │   └── summaries/                             # Analysis summaries
 │       ├── summary_notebooks_01-03.md
 │       ├── summary_notebooks_04-05.md
-│       ├── summary_notebooks_06-09_analysis.md
-│       └── Apollo_Healthcare_Connect_Summary.md
+│       └── summary_notebooks_06-09_analysis.md
 │
 ├── data/
 │   ├── synthetic/                             # Generated datasets
