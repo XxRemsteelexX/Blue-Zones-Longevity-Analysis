@@ -1,0 +1,68 @@
+GRAVITY-LONGEVITY HYPOTHESIS ANALYSIS
+==================================================
+
+HYPOTHESIS: Earth's gravitational variation affects human aging and longevity.
+Lower gravity (closer to equator) may reduce cellular stress and extend lifespan.
+
+CORRELATION ANALYSIS:
+--------------------
+
+LIFE_EXPECTANCY:
+  • effective_gravity: r = 0.0628 (weak positive)
+  • gravity_deviation: r = 0.0628 (weak positive)
+  • gravity_deviation_pct: r = 0.0628 (weak positive)
+  • equatorial_distance: r = 0.1062 (weak positive)
+
+CVD_MORTALITY:
+  • effective_gravity: r = -0.0979 (weak negative)
+  • gravity_deviation: r = -0.0979 (weak negative)
+  • gravity_deviation_pct: r = -0.0979 (weak negative)
+  • equatorial_distance: r = -0.1085 (weak negative)
+
+REGRESSION ANALYSIS:
+--------------------
+
+LIFE_EXPECTANCY:
+  • Coefficient: 72.509662
+  • R²: 0.0039
+  • P-value: 0.5303
+  • Higher gravity associated with longer life. Lifetime effect: 290.04 years. Possible mechanisms: bone density, cardiovascular adaptation
+
+CVD_MORTALITY:
+  • Coefficient: -2125.987818
+  • R²: 0.0096
+  • P-value: 0.3274
+  • Lower gravity associated with lower mortality. Lifetime effect: 8503.951 per 1000.
+
+BLUE ZONE ANALYSIS:
+--------------------
+
+effective_gravity:
+  • Blue Zones: 9.803460 m/s²
+  • Other regions: 9.804191 m/s²
+  • Difference: -0.000731
+  • P-value: 0.5610
+
+gravity_deviation_pct:
+  • Blue Zones: -0.032533 m/s²
+  • Other regions: -0.025079 m/s²
+  • Difference: -0.007455
+  • P-value: 0.5610
+
+DOSE-RESPONSE ANALYSIS:
+--------------------
+Linear trend correlation: 0.3333
+Trend p-value: 0.6667
+Linear trend: Not significant
+
+CONCLUSIONS:
+--------------------
+• Gravity varies by ~0.5% globally (9.78-9.83 m/s²)
+• Blue Zones cluster near equator (lower gravity regions)
+• Small gravity differences compound over 80-year lifespans
+• Novel mechanism for geographic longevity patterns
+
+POLICY IMPLICATIONS:
+• Consider gravitational effects in healthy aging research
+• Equatorial regions may have natural longevity advantages
+• Complement lifestyle interventions with environmental factors

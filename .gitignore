@@ -1,0 +1,183 @@
+# Blue Zones Research Project .gitignore
+
+# =============================================================================
+# Python
+# =============================================================================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# =============================================================================
+# Virtual Environments
+# =============================================================================
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+blue_zones_env/
+.conda/
+
+# =============================================================================
+# Jupyter Notebook
+# =============================================================================
+.ipynb_checkpoints
+*/.ipynb_checkpoints/*
+.jupyter/
+jupyter_config/
+
+# =============================================================================
+# Data Files (keep structure but not large datasets)
+# =============================================================================
+# Large datasets
+*.csv
+*.xlsx
+*.parquet
+*.h5
+*.hdf5
+*.feather
+*.pickle
+*.pkl
+*.joblib
+
+# Keep sample/demo data (small files)
+!data/sample/*.csv
+!data/demo/*.csv
+!requirements.txt
+!environment.yml
+
+# Generated outputs
+outputs/data/
+outputs/models/*.pkl
+outputs/models/*.h5
+outputs/models/*.joblib
+outputs/cache/
+
+# =============================================================================
+# IDE and Editor Files
+# =============================================================================
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# =============================================================================
+# OS Generated Files
+# =============================================================================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# =============================================================================
+# Logs and Temporary Files
+# =============================================================================
+*.log
+logs/
+temp/
+tmp/
+cache/
+.cache/
+
+# =============================================================================
+# Model Artifacts (too large for git)
+# =============================================================================
+models/*.pkl
+models/*.h5
+models/*.joblib
+*.model
+checkpoints/
+
+# =============================================================================
+# Large Image Files
+# =============================================================================
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.bmp
+*.tiff
+*.svg
+
+# Keep small demo images and diagrams
+!assets/diagrams/*.png
+!assets/logos/*.png
+!README_images/*.png
+
+# =============================================================================
+# Environment Variables and Secrets
+# =============================================================================
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+secrets.yml
+config/secrets/
+
+# =============================================================================
+# Archives
+# =============================================================================
+*.zip
+*.tar.gz
+*.rar
+*.7z
+
+# =============================================================================
+# Project Specific Exclusions
+# =============================================================================
+# Backup files
+*.bak
+*.backup
+*_backup
+*_old
+
+# Test outputs
+test_outputs/
+experiments/
+scratch/
+sandbox/
+
+# =============================================================================
+# Keep These Important Files (explicit allow)
+# =============================================================================
+!README.md
+!README_NEW.md
+!requirements.txt
+!environment.yml
+!setup.py
+!LICENSE
+!.gitignore
+!notebooks/*.ipynb
+!src/**/*.py
+!scripts/**/*.py
+!config/**/*.yml
+!config/**/*.yaml
+!config/**/*.json
+!docs/**/*.md
+!*.md

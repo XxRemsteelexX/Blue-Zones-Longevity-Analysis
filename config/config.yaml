@@ -1,0 +1,190 @@
+# Blue Zones Quantified Configuration
+
+# Project Settings
+project:
+  name: "Blue Zones Quantified"
+  version: "1.0.0"
+  random_state: 42
+
+# Spatial Configuration
+spatial:
+  primary_resolution_km: 5
+  sensitivity_resolutions_km: [1, 10]
+  global_bounds:
+    min_lat: -60
+    max_lat: 80
+    min_lon: -180
+    max_lon: 180
+  
+# Temporal Configuration  
+temporal:
+  start_year: 1990
+  end_year: 2021
+  increment_years: 5
+  forecast_years: [2030, 2035, 2040]
+  moving_average_years: 20
+  trend_years: 10
+
+# Blue Zones Ground Truth
+blue_zones:
+  canonical:
+    sardinia:
+      name: "Sardinia (Ogliastra/Barbagia)"
+      country: "Italy"
+      lat_range: [39.8, 40.4]
+      lon_range: [9.2, 9.8]
+    okinawa:
+      name: "Okinawa"
+      country: "Japan"  
+      lat_range: [26.0, 26.9]
+      lon_range: [127.6, 128.4]
+    nicoya:
+      name: "Nicoya Peninsula"
+      country: "Costa Rica"
+      lat_range: [9.8, 10.6]
+      lon_range: [-85.8, -85.0]
+    ikaria:
+      name: "Ikaria"
+      country: "Greece"
+      lat_range: [37.5, 37.7]
+      lon_range: [26.0, 26.4]
+    loma_linda:
+      name: "Loma Linda"
+      country: "USA"
+      lat_range: [34.0, 34.1]
+      lon_range: [-117.3, -117.2]
+  
+  validation_cases:
+    - name: "Switzerland"
+      country: "Switzerland"
+    - name: "Monaco"
+      country: "Monaco"
+    - name: "Andorra"
+      country: "Andorra"
+    - name: "Japanese Prefectures"
+      country: "Japan"
+
+# Data Sources
+data_sources:
+  life_expectancy:
+    source: "IHME GBD"
+    years: [1990, 2021]
+    resolution: "subnational"
+  
+  climate:
+    source: "ERA5"
+    variables: ["temperature", "precipitation", "humidity"]
+    resolution: "0.25deg"
+    
+  air_quality:
+    source: "Van Donkelaar PM2.5"
+    resolution: "0.01deg"
+    
+  population:
+    source: "WorldPop"
+    resolution: "100m"
+    
+  elevation:
+    source: "NASA SRTM"
+    resolution: "30m"
+    
+  socioeconomic:
+    source: "World Bank"
+    indicators: ["GDP_PPP", "poverty", "education"]
+    
+  nightlights:
+    source: "VIIRS"
+    resolution: "500m"
+
+# Feature Engineering
+features:
+  geodesy:
+    - "latitude"
+    - "longitude" 
+    - "abs_latitude"
+    - "distance_to_equator"
+    - "distance_to_coast"
+    - "elevation"
+    - "slope"
+    - "ruggedness"
+    - "effective_gravity"
+    
+  climate:
+    - "temp_mean_annual"
+    - "temp_seasonality"
+    - "temp_diurnal_range"
+    - "precip_annual"
+    - "precip_seasonality"
+    - "humidity_mean"
+    - "temp_20y_avg"
+    - "temp_10y_trend"
+    
+  environment:
+    - "pm25_annual"
+    - "pm25_20y_avg"
+    - "pm25_10y_trend"
+    - "ndvi_mean"
+    - "tree_cover"
+    - "protected_area_share"
+    
+  demographics:
+    - "population_density_log"
+    - "urban_share"
+    - "age_structure_65plus"
+    - "age_structure_under5"
+    - "migration_share"
+    
+  infrastructure:
+    - "travel_time_city_50k"
+    - "travel_time_hospital"
+    - "road_density"
+    - "clean_water_access"
+    
+  socioeconomic:
+    - "gdp_per_capita_ppp"
+    - "poverty_headcount"
+    - "education_mean_years"
+    - "nighttime_lights"
+    
+  lifestyle:
+    - "religious_site_density"
+    - "market_density"
+    - "cycling_infrastructure"
+    - "walkability_score"
+    - "mediterranean_diet_proxy"
+
+# Model Configuration
+models:
+  matching:
+    algorithm: "propensity_score"
+    caliper: 0.1
+    
+  classification:
+    algorithm: "lightgbm"
+    params:
+      n_estimators: 1000
+      learning_rate: 0.05
+      max_depth: 6
+      
+  forecasting:
+    primary: "lightgbm"
+    ensemble: ["xgboost", "random_forest"]
+    uncertainty: "quantile_regression"
+    
+  validation:
+    spatial_cv: "leave_one_country_out"
+    temporal_cv: "rolling_window"
+    n_folds: 5
+
+# Output Configuration
+outputs:
+  maps:
+    format: "geotiff"
+    crs: "EPSG:4326"
+    
+  predictions:
+    format: "parquet"
+    
+  visualizations:
+    format: "html"
+    backend: "plotly"

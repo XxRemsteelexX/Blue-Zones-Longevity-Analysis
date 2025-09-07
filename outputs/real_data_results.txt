@@ -1,0 +1,16 @@
+Blue Zones Real Data Analysis Results
+========================================
+
+Analysis Date: 2025-09-06 15:40:12
+Countries Analyzed: 100
+Blue Zones: 5
+
+Gravity Correlation: r = 0.0628
+
+Descriptive Statistics:
+Average Life Expectancy: 75.5 years
+Standard Deviation: 3.1 years
+Gravity Range: 9.7996 - 9.8102 m/s²
+
+Multiple Regression R²: 0.0229
+Features Used: effective_gravity, gdp_per_capita

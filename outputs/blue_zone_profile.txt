@@ -1,0 +1,20 @@
+Blue Zone Statistical Profile
+==============================
+
+Analysis Date: 2025-09-06 15:40:23
+
+Latitude Abs:
+  Range: 10.20 - 40.10
+  Mean: 29.64
+  Std Dev: 12.05
+
+Gdp Per Capita:
+  Range: 10751.68 - 47010.05
+  Mean: 23083.60
+  Std Dev: 14201.64
+
+Effective Gravity:
+  Range: 9.80 - 9.80
+  Mean: 9.80
+  Std Dev: 0.00
+
