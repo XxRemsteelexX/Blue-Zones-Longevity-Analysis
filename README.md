@@ -321,13 +321,6 @@ If you use this research, please cite:
 
 ---
 
-## 📧 Contact
-
-**Principal Investigator:** [Your Name]  
-**Email:** [your.email@domain.com]  
-**LinkedIn:** [linkedin.com/in/yourprofile](https://linkedin.com)  
-**GitHub:** [github.com/yourusername](https://github.com)
-
 ---
 
 *Last Updated: September 2025*
