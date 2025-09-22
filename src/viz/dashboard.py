@@ -470,14 +470,14 @@ class BlueZonesDashboard:
             </style>
         </head>
         <body>
-            <h1>🌍 Blue Zones Quantified: Analysis Dashboard</h1>
+            <h1>Blue Zones Quantified: Analysis Dashboard</h1>
         """)
         
         # Summary statistics
         html_parts.append(self._create_summary_section(all_data))
         
         # Analysis plots
-        html_parts.append('<div class="section"><h2>📊 Analysis Results</h2>')
+        html_parts.append('<div class="section"><h2>Analysis Results</h2>')
         
         for plot_name, plot in plots.items():
             if plot:
@@ -501,7 +501,7 @@ class BlueZonesDashboard:
     def _create_summary_section(self, all_data: Dict[str, Any]) -> str:
         """Create summary statistics section"""
         
-        summary_html = '<div class="section"><h2>📈 Analysis Summary</h2>'
+        summary_html = '<div class="section"><h2>Analysis Summary</h2>'
         
         # Data summary
         if 'analysis_metadata' in all_data:

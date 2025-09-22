@@ -21,7 +21,7 @@ def main():
     logger = setup_logging("INFO")
     config = load_config("config/config.yaml")
     
-    logger.info("🌍 Starting Blue Zones Quantified Full Analysis Pipeline")
+    logger.info("World Starting Blue Zones Quantified Full Analysis Pipeline")
     logger.info("=" * 70)
     
     pipeline_start_time = time.time()
@@ -79,7 +79,7 @@ def main():
     results = []
     
     for i, step in enumerate(pipeline_steps, 1):
-        logger.info(f"\n📊 Step {i}/{len(pipeline_steps)}: {step['name']}")
+        logger.info(f"\nStats Step {i}/{len(pipeline_steps)}: {step['name']}")
         logger.info(f"Description: {step['description']}")
         logger.info("-" * 50)
         
@@ -97,14 +97,14 @@ def main():
             step_duration = time.time() - step_start_time
             
             if result.returncode == 0:
-                logger.info(f"✅ {step['name']} completed successfully ({step_duration:.1f}s)")
+                logger.info(f"SUCCESS {step['name']} completed successfully ({step_duration:.1f}s)")
                 results.append({
                     'step': step['name'],
                     'status': 'success',
                     'duration': step_duration
                 })
             else:
-                logger.error(f"❌ {step['name']} failed ({step_duration:.1f}s)")
+                logger.error(f"ERROR {step['name']} failed ({step_duration:.1f}s)")
                 logger.error(f"Error output: {result.stderr}")
                 results.append({
                     'step': step['name'],
@@ -119,7 +119,7 @@ def main():
                     
         except Exception as e:
             step_duration = time.time() - step_start_time
-            logger.error(f"❌ {step['name']} failed with exception ({step_duration:.1f}s): {e}")
+            logger.error(f"ERROR {step['name']} failed with exception ({step_duration:.1f}s): {e}")
             results.append({
                 'step': step['name'],
                 'status': 'failed',
@@ -145,12 +145,12 @@ def main():
     logger.info(f"Failed steps: {len(failed_steps)}/{len(results)}")
     
     if successful_steps:
-        logger.info("\n✅ Successful Steps:")
+        logger.info("\nSUCCESS Successful Steps:")
         for result in successful_steps:
             logger.info(f"  • {result['step']} ({result['duration']:.1f}s)")
     
     if failed_steps:
-        logger.info("\n❌ Failed Steps:")
+        logger.info("\nERROR Failed Steps:")
         for result in failed_steps:
             logger.info(f"  • {result['step']} ({result['duration']:.1f}s)")
     
@@ -163,7 +163,7 @@ def main():
     logger.info("  • Visualizations: data/outputs/visualizations/")
     
     # Key deliverables
-    logger.info("\n🎯 Key Deliverables:")
+    logger.info("\nTARGET Key Deliverables:")
     key_outputs = [
         "data/outputs/visualizations/blue_zones_dashboard.html",
         "data/outputs/blue_zone_predictions.csv",
@@ -175,9 +175,9 @@ def main():
     for output in key_outputs:
         output_path = Path(output)
         if output_path.exists():
-            logger.info(f"  ✅ {output}")
+            logger.info(f"  SUCCESS {output}")
         else:
-            logger.info(f"  ❌ {output} (not generated)")
+            logger.info(f"  ERROR {output} (not generated)")
     
     # Final recommendations
     logger.info("\n💡 Next Steps:")
@@ -193,10 +193,10 @@ def main():
     
     # Return appropriate exit code
     if len(failed_steps) == 0:
-        logger.info("\n🎉 Pipeline completed successfully!")
+        logger.info("\nSUCCESS Pipeline completed successfully!")
         return 0
     elif len(successful_steps) > len(failed_steps):
-        logger.info("\n⚠️  Pipeline completed with some failures")
+        logger.info("\nWARNING  Pipeline completed with some failures")
         return 1
     else:
         logger.info("\n💥 Pipeline failed")

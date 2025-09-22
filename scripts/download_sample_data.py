@@ -25,7 +25,7 @@ def main():
     logger = setup_logging("INFO")
     config = load_config("config/config.yaml")
     
-    logger.info("🌍 Starting REAL data download for Blue Zones project (No Synthetic Data)")
+    logger.info("World Starting REAL data download for Blue Zones project (No Synthetic Data)")
     
     # Create output directories
     raw_data_dir = Path("data/raw")
@@ -36,7 +36,7 @@ def main():
     total_sources = 3
     
     # 1. Download World Bank data (REAL ONLY)
-    logger.info("📊 Downloading World Bank data...")
+    logger.info("Stats Downloading World Bank data...")
     if download_world_bank_data(config, logger):
         success_count += 1
     
@@ -50,17 +50,17 @@ def main():
     if download_real_amenities_data(config, logger):
         success_count += 1
     
-    logger.info(f"📈 Data acquisition summary: {success_count}/{total_sources} sources successful")
+    logger.info(f"CHART Data acquisition summary: {success_count}/{total_sources} sources successful")
     
     if success_count == 0:
-        logger.error("❌ No real data sources were available. Check your internet connection and API access.")
+        logger.error("ERROR No real data sources were available. Check your internet connection and API access.")
         return 1
     elif success_count < total_sources:
-        logger.warning(f"⚠️ Only {success_count}/{total_sources} data sources succeeded. Analysis may be limited.")
+        logger.warning(f"WARNING Only {success_count}/{total_sources} data sources succeeded. Analysis may be limited.")
     else:
-        logger.info("✅ All real data sources downloaded successfully!")
+        logger.info("SUCCESS All real data sources downloaded successfully!")
     
-    logger.info("🚀 Ready to run analysis with real data only!")
+    logger.info("READY Ready to run analysis with real data only!")
     return 0
 
 
@@ -90,26 +90,26 @@ def download_world_bank_data(config, logger):
         )
         
         if wb_data is None or wb_data.empty:
-            logger.error("❌ World Bank API returned no data")
+            logger.error("ERROR World Bank API returned no data")
             return False
         
         # Save to CSV
         output_file = Path("data/raw/socioeconomic/world_bank_real.csv")
         wb_data.to_csv(output_file, index=False)
         
-        logger.info(f"✅ World Bank REAL data saved: {len(wb_data)} records")
+        logger.info(f"SUCCESS World Bank REAL data saved: {len(wb_data)} records")
         
         # Also get country metadata
         metadata = wb_api.get_country_metadata()
         if metadata is not None and not metadata.empty:
             metadata.to_csv("data/raw/socioeconomic/country_metadata.csv", index=False)
-            logger.info(f"✅ Country metadata saved: {len(metadata)} countries")
+            logger.info(f"SUCCESS Country metadata saved: {len(metadata)} countries")
         
         return True
         
     except Exception as e:
-        logger.error(f"❌ Failed to download World Bank data: {e}")
-        logger.error("❌ No synthetic fallback - real data only mode")
+        logger.error(f"ERROR Failed to download World Bank data: {e}")
+        logger.error("ERROR No synthetic fallback - real data only mode")
         return False
 
 
@@ -143,28 +143,28 @@ def download_real_climate_data(config, logger):
                         climate_data['location'] = location['name']
                         climate_data['country'] = location['country']
                         all_climate_data.append(climate_data)
-                        logger.info(f"  ✅ {location['name']}: {len(climate_data)} climate records")
+                        logger.info(f"  SUCCESS {location['name']}: {len(climate_data)} climate records")
                     else:
-                        logger.warning(f"  ⚠️ No climate data for {location['name']}")
+                        logger.warning(f"  WARNING No climate data for {location['name']}")
                         
                 except Exception as e:
-                    logger.warning(f"  ⚠️ Failed to fetch climate data for {location['name']}: {e}")
+                    logger.warning(f"  WARNING Failed to fetch climate data for {location['name']}: {e}")
             
             if all_climate_data:
                 combined_climate = pd.concat(all_climate_data, ignore_index=True)
                 combined_climate.to_csv("data/raw/climate/real_climate_data.csv", index=False)
-                logger.info(f"✅ Real climate data saved: {len(combined_climate)} records")
+                logger.info(f"SUCCESS Real climate data saved: {len(combined_climate)} records")
                 return True
             else:
-                logger.error("❌ No real climate data could be retrieved")
+                logger.error("ERROR No real climate data could be retrieved")
                 return False
                 
         except Exception as e:
-            logger.error(f"❌ Climate API failed: {e}")
+            logger.error(f"ERROR Climate API failed: {e}")
             return False
             
     except Exception as e:
-        logger.error(f"❌ Failed to download real climate data: {e}")
+        logger.error(f"ERROR Failed to download real climate data: {e}")
         return False
 
 
@@ -188,7 +188,7 @@ def download_real_amenities_data(config, logger):
         
         for region_name, bbox in regions.items():
             try:
-                logger.info(f"  🔍 Fetching amenities for {region_name}...")
+                logger.info(f"  SEARCH Fetching amenities for {region_name}...")
                 amenities = osm_acquirer.fetch_amenities(
                     bbox=bbox,
                     amenity_types=['hospital', 'clinic', 'pharmacy', 'market', 'school', 'place_of_worship']
@@ -198,27 +198,27 @@ def download_real_amenities_data(config, logger):
                     amenities['region'] = region_name
                     all_amenities.append(amenities)
                     success_regions += 1
-                    logger.info(f"  ✅ {region_name}: {len(amenities)} real amenities found")
+                    logger.info(f"  SUCCESS {region_name}: {len(amenities)} real amenities found")
                 else:
-                    logger.warning(f"  ⚠️ No amenities found for {region_name}")
+                    logger.warning(f"  WARNING No amenities found for {region_name}")
                     
             except Exception as e:
-                logger.warning(f"  ⚠️ Failed to fetch {region_name}: {e}")
+                logger.warning(f"  WARNING Failed to fetch {region_name}: {e}")
         
         # Save combined real data only
         if all_amenities:
             combined_amenities = pd.concat(all_amenities, ignore_index=True)
             combined_amenities.to_csv("data/raw/amenities/real_amenities_data.csv", index=False)
-            logger.info(f"✅ Real amenities data saved: {len(combined_amenities)} records from {success_regions} regions")
+            logger.info(f"SUCCESS Real amenities data saved: {len(combined_amenities)} records from {success_regions} regions")
             return True
         else:
-            logger.error("❌ No real amenities data could be retrieved from any region")
-            logger.error("❌ No synthetic fallback available - real data only mode")
+            logger.error("ERROR No real amenities data could be retrieved from any region")
+            logger.error("ERROR No synthetic fallback available - real data only mode")
             return False
             
     except Exception as e:
-        logger.error(f"❌ OSM API completely failed: {e}")
-        logger.error("❌ No synthetic fallback available - real data only mode")
+        logger.error(f"ERROR OSM API completely failed: {e}")
+        logger.error("ERROR No synthetic fallback available - real data only mode")
         return False
 
 

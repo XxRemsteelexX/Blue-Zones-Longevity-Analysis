@@ -34,7 +34,7 @@ def main():
     # Check if we're in base environment
     current_env = sys.prefix
     if 'blue_zones_env' in current_env:
-        print("❌ You're in the virtual environment. Please deactivate first:")
+        print("ERROR You're in the virtual environment. Please deactivate first:")
         print("   deactivate")
         print("   python3 cleanup_base_packages.py")
         return
@@ -54,7 +54,7 @@ def main():
         'earthengine-api', 'wbdata', 'fuzzywuzzy', 'python-levenshtein'
     ]
     
-    print("\n🔍 Checking for Blue Zones packages in base environment...")
+    print("\nSEARCH Checking for Blue Zones packages in base environment...")
     
     installed_packages = get_installed_packages()
     packages_to_remove = []
@@ -74,7 +74,7 @@ def main():
                 break
     
     if not packages_to_remove:
-        print("✅ No Blue Zones packages found in base environment - you're clean!")
+        print("SUCCESS No Blue Zones packages found in base environment - you're clean!")
         return
     
     print(f"\n📦 Found {len(packages_to_remove)} packages to remove:")
@@ -84,7 +84,7 @@ def main():
     response = input(f"\n❓ Remove these {len(packages_to_remove)} packages from base environment? (y/N): ")
     
     if response.lower() != 'y':
-        print("❌ Cleanup cancelled.")
+        print("ERROR Cleanup cancelled.")
         return
     
     print("\n🗑️ Removing packages...")
@@ -94,11 +94,11 @@ def main():
         stdout, stderr, returncode = run_command(f"pip uninstall -y {package}")
         
         if returncode == 0:
-            print("✅")
+            print("SUCCESS")
         else:
-            print(f"❌ (Error: {stderr.strip()[:50]})")
+            print(f"ERROR (Error: {stderr.strip()[:50]})")
     
-    print("\n✅ Base environment cleanup complete!")
+    print("\nSUCCESS Base environment cleanup complete!")
     print("\n📋 Next steps:")
     print("1. Activate your virtual environment:")
     print("   cd '/home/yeblad/Desktop/Blue ZOnes'")

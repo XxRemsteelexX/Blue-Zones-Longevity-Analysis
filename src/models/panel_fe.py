@@ -815,7 +815,7 @@ class PanelFixedEffects:
         coef_std = robustness_summary.get('coef_std', 0)
         
         summary_text = f"""
-🔬 CAUSAL INFERENCE RESULTS SUMMARY
+RESEARCH CAUSAL INFERENCE RESULTS SUMMARY
 {'='*50}
 
 MAIN FINDING:
