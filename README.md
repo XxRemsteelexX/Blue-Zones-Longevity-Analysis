@@ -142,6 +142,25 @@ pip install -r requirements.txt
 
 ## Running the Analysis
 
+### Interactive Dashboard
+
+The project now includes a professional interactive dashboard built with Streamlit:
+
+```bash
+# Install additional dependencies
+pip install streamlit plotly
+
+# Run the interactive dashboard
+streamlit run blue_zones_dashboard.py
+```
+
+The dashboard features:
+- Interactive world map with Blue Zones locations
+- Key performance indicators and metrics
+- Health and longevity analysis charts
+- Economic and environmental factor correlations
+- Data filtering and exploration tools
+
 ### Real-World Data Collection
 
 The current analysis uses real-world data from authoritative APIs:
