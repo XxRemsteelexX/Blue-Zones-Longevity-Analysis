@@ -1,1 +1,0 @@
-# Blue Zones Quantified Package
