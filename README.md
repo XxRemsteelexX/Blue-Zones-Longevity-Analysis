@@ -6,6 +6,7 @@
 [![Countries](https://img.shields.io/badge/Countries-93-blue)](./data)
 [![Findings](https://img.shields.io/badge/Key%20Finding-Rejected%20Gravity%20Hypothesis-orange)](./Blue_Zones_Real_World_Analysis_Report.md)
 [![Health Data](https://img.shields.io/badge/WHO%20Data%20API-Integrated-green)](./scripts)
+[![Live Dashboard](https://img.shields.io/badge/Live%20Dashboard-Streamlit-red)](https://xxremsteelexx-blue-zones-longevity--blue-zones-dashboard-xgbvew.streamlit.app/)
 
 ---
 
@@ -144,8 +145,11 @@ pip install -r requirements.txt
 
 ### Interactive Dashboard
 
-The project now includes a professional interactive dashboard built with Streamlit:
+The project includes a professional interactive dashboard built with Streamlit:
 
+**[LIVE DASHBOARD - Click Here](https://xxremsteelexx-blue-zones-longevity--blue-zones-dashboard-xgbvew.streamlit.app/)**
+
+**Run Locally:**
 ```bash
 # Install additional dependencies
 pip install streamlit plotly
