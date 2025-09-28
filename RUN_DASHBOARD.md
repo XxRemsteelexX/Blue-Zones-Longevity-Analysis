@@ -1,4 +1,4 @@
-# 🌿 Blue Zones Longevity Dashboard - Running Instructions
+# Blue Zones Longevity Dashboard - Running Instructions
 
 ## Overview
 This professional interactive dashboard analyzes longevity patterns in Blue Zones vs. global populations using real-world health, environmental, and economic data.
@@ -36,30 +36,30 @@ streamlit run blue_zones_dashboard.py
 
 ## Dashboard Features
 
-### 🔍 Interactive Controls
+### Interactive Controls
 - **Zone Type Filter**: Choose between Blue Zones, Regular Zones, or both
 - **Country Filter**: Select specific countries for focused analysis
 - **Data Explorer**: Toggle between all zones or Blue Zones only
 
-### 📈 Key Performance Indicators
+### Key Performance Indicators
 - Blue Zones count and coverage
 - Life expectancy comparisons
 - Infant mortality rates
 - Forest coverage analysis
 
-### 🗺️ Visualizations
+### Visualizations
 - **World Map**: Interactive global view of Blue Zones with life expectancy data
 - **Longevity Comparison**: Box plots showing life expectancy distributions
 - **Radar Chart**: Multi-dimensional health metrics comparison
 - **Scatter Plot**: GDP vs Life Expectancy correlation
 - **Correlation Heatmap**: Health and environmental factor relationships
 
-### 📋 Data Explorer
+### Data Explorer
 - Sortable and filterable data table
 - Blue Zones specific filtering
 - Key metrics display
 
-### 🔍 Insights Section
+### Insights Section
 - Blue Zones advantages summary
 - Statistical findings and correlations
 
@@ -151,4 +151,4 @@ After running the dashboard:
 
 ---
 
-**Enjoy exploring the secrets of longevity through data! 🌿📊**
+**Enjoy exploring the secrets of longevity through data!**

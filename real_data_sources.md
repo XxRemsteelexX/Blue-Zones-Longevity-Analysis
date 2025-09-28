@@ -114,17 +114,17 @@
 ## Data Quality Considerations
 
 ### Advantages of Real Data
-- ✅ Reflects actual conditions
-- ✅ Enables real-world validation
-- ✅ Supports policy recommendations
-- ✅ Allows for longitudinal analysis
+- Reflects actual conditions
+- Enables real-world validation
+- Supports policy recommendations
+- Allows for longitudinal analysis
 
 ### Challenges
-- ❌ Data availability varies by country
-- ❌ Different reporting standards
-- ❌ Missing data for some regions
-- ❌ Time lag in data publication
-- ❌ Need for data harmonization
+- Data availability varies by country
+- Different reporting standards
+- Missing data for some regions
+- Time lag in data publication
+- Need for data harmonization
 
 ## Data Collection Strategy
 
