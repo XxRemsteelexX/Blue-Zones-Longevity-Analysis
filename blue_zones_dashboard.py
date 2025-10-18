@@ -296,14 +296,19 @@ def create_gdp_life_expectancy_scatter(df):
     # Filter out rows with missing required values
     df_scatter = df.dropna(subset=['gdp_per_capita', 'life_expectancy_combined', 'population_total'])
     df_scatter = df_scatter[df_scatter['population_total'] > 0]
-    
+
     fig = px.scatter(
         df_scatter,
         x="gdp_per_capita",
         y="life_expectancy_combined",
         color="zone_type",
-        size="population_total",
-        hover_data=['country_name', 'blue_zone_region'],
+        # Removed size parameter - all dots same size for visibility
+        hover_data={
+            'country_name': True,
+            'blue_zone_region': True,
+            'population_total': ':,.0f',
+            'zone_type': False  # Hide since it's shown in legend
+        },
         color_discrete_map={
             'Blue Zone': '#2E8B57',
             'Regular Zone': '#4682B4'
@@ -311,12 +316,16 @@ def create_gdp_life_expectancy_scatter(df):
         title="Economic Development vs Life Expectancy",
         labels={
             'gdp_per_capita': 'GDP per Capita (USD)',
-            'life_expectancy_combined': 'Life Expectancy (Years)'
+            'life_expectancy_combined': 'Life Expectancy (Years)',
+            'population_total': 'Population'
         }
     )
-    
+
+    # Make all markers larger and uniform size
+    fig.update_traces(marker=dict(size=10, line=dict(width=1, color='white')))
+
     fig.update_layout(height=500)
-    
+
     return fig
 
 def main():
