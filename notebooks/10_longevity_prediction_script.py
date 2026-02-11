@@ -333,12 +333,12 @@ def main():
     print(f"\n" + "=" * 60)
     print("LONGEVITY PREDICTION ANALYSIS COMPLETE")
     print("=" * 60)
-    print(f"✓ Model trained successfully (R² = {model_stats['cv_r2_mean']:.4f})")
-    print(f"✓ Prediction accuracy: ±{model_stats['test_mae']:.1f} years MAE")
-    print(f"✓ Feature importance analyzed")
-    print(f"✓ Predictions generated for real data scenarios")
-    print(f"✓ Visualizations created")
-    print(f"✓ Results saved to ../outputs/")
+    print(f"[OK] Model trained successfully (R² = {model_stats['cv_r2_mean']:.4f})")
+    print(f"[OK] Prediction accuracy: ±{model_stats['test_mae']:.1f} years MAE")
+    print(f"[OK] Feature importance analyzed")
+    print(f"[OK] Predictions generated for real data scenarios")
+    print(f"[OK] Visualizations created")
+    print(f"[OK] Results saved to ../outputs/")
 
 if __name__ == "__main__":
     main()

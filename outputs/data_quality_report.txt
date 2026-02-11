@@ -1,0 +1,48 @@
+DATA QUALITY VERIFICATION REPORT
+Generated: 2026-02-08 22:54:31.081677
+======================================================================
+
+
+--- HISTORICAL DATA ---
+  [PASS] CRI: 64 years of LE data (100% coverage)
+  [PASS] GRC: 64 years of LE data (100% coverage)
+  [PASS] ITA: 64 years of LE data (100% coverage)
+  [PASS] JPN: 64 years of LE data (100% coverage)
+  [PASS] USA: 64 years of LE data (100% coverage)
+  [PASS] All 5948 LE values in range [25, 95]
+  [PASS] All 5306 GDP values are positive
+  [WARN] 33 instances of LE changing >5 years between consecutive points
+  [PASS] Year range: 1960-2023 (covers 1960s to 2020s)
+  [PASS] 93 countries with data (target: 80+)
+  [PASS] 5,952 total country-year rows
+
+--- PROJECTIONS ---
+  [PASS] Projections exist for CRI (77 data points)
+  [PASS] Projections exist for GRC (77 data points)
+  [PASS] Projections exist for ITA (77 data points)
+  [PASS] Projections exist for JPN (77 data points)
+  [PASS] Projections exist for USA (77 data points)
+  [PASS] Projections extend to 2100
+  [PASS] Medium variant: 7161 data points
+  [PASS] Projection values in range [54.6, 88.3]
+
+--- ANALYSIS OUTPUTS ---
+  [PASS] blue_zone_vs_global.csv: 64 rows
+  [PASS] sigma_convergence.csv: 64 rows
+  [PASS] beta_convergence.csv: 6 rows
+  [PASS] blue_zone_country_profiles.csv: 320 rows
+  [PASS] decade_improvements.csv: 18 rows
+
+--- VISUALIZATIONS ---
+  [PASS] blue_zones_historical_projections.png: 277 KB
+  [PASS] convergence_analysis.png: 183 KB
+  [PASS] global_heatmap.png: 262 KB
+  [PASS] improvement_rates.png: 87 KB
+  [PASS] blue_zone_ranking.png: 190 KB
+  [PASS] country_deep_dives/CRI_deep_dive.png
+  [PASS] country_deep_dives/GRC_deep_dive.png
+  [PASS] country_deep_dives/ITA_deep_dive.png
+  [PASS] country_deep_dives/JPN_deep_dive.png
+  [PASS] country_deep_dives/USA_deep_dive.png
+
+SUMMARY: 33 passed, 1 warnings, 0 failures

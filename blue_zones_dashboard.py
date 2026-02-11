@@ -2,11 +2,9 @@
 """
 Blue Zones Longevity Analysis Dashboard
 
-A professional interactive dashboard analyzing longevity patterns in Blue Zones
-vs. global populations using real-world health, environmental, and economic data.
-
-Author: Professional Analytics Team
-Created: 2025-09-28
+Interactive Streamlit dashboard showing historical trends (1960-2023),
+convergence analysis, country deep dives, and future projections.
+Built on real World Bank, WHO, and UN data.
 """
 
 import streamlit as st
@@ -15,508 +13,523 @@ import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
-import plotly.figure_factory as ff
+import os
 
-# Page configuration
+# ---------------------------------------------------------------------------
+# Page config
+# ---------------------------------------------------------------------------
 st.set_page_config(
     page_title="Blue Zones Longevity Analysis",
     page_icon="BZ",
     layout="wide",
-    initial_sidebar_state="collapsed"
+    initial_sidebar_state="expanded",
 )
 
-# Custom CSS for professional styling
 st.markdown("""
 <style>
-    .main-header {
-        font-size: 2.5rem;
-        font-weight: bold;
-        text-align: center;
-        color: #2E8B57;
-        margin-bottom: 2rem;
-    }
-    
-    .section-header {
-        font-size: 1.5rem;
-        font-weight: bold;
-        color: #4682B4;
-        margin-top: 2rem;
-        margin-bottom: 1rem;
-    }
-    
-    .metric-container {
-        background-color: #f0f8ff;
-        padding: 1rem;
-        border-radius: 10px;
-        border-left: 4px solid #4682B4;
-        margin: 0.5rem 0;
-    }
-    
-    .blue-zone-highlight {
-        background-color: #e8f5e8;
-        padding: 0.5rem;
-        border-radius: 5px;
-        border: 1px solid #2E8B57;
-    }
-    
-    .sidebar-info {
-        background-color: #f9f9f9;
-        padding: 1rem;
-        border-radius: 8px;
-        margin: 1rem 0;
-    }
+    .main-header {font-size:2.2rem;font-weight:700;text-align:center;color:#1a1a2e;margin-bottom:0.3rem}
+    .sub-header {font-size:1rem;text-align:center;color:#555;margin-bottom:2rem}
+    .section-hdr {font-size:1.4rem;font-weight:600;color:#16213e;border-bottom:2px solid #0f3460;padding-bottom:0.3rem;margin-top:2rem}
+    .kpi-card {background:#f8f9fa;border-radius:8px;padding:1rem;border-left:4px solid #0f3460;margin:0.3rem 0}
 </style>
 """, unsafe_allow_html=True)
 
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+
+BZ_COLORS = {
+    "USA": "#E74C3C", "JPN": "#3498DB", "ITA": "#2ECC71",
+    "GRC": "#9B59B6", "CRI": "#F39C12",
+}
+BZ_NAMES = {
+    "USA": "United States (Loma Linda)",
+    "JPN": "Japan (Okinawa)",
+    "ITA": "Italy (Sardinia)",
+    "GRC": "Greece (Ikaria)",
+    "CRI": "Costa Rica (Nicoya)",
+}
+
+# ---------------------------------------------------------------------------
+# Data loading
+# ---------------------------------------------------------------------------
 @st.cache_data
-def load_data():
-    """Load and preprocess Blue Zones data"""
-    try:
-        # Try to load the comprehensive dataset first
-        df = pd.read_csv('real_world_blue_zones_comprehensive.csv')
-    except FileNotFoundError:
-        # Fallback to analysis results
-        try:
-            df = pd.read_csv('real_world_analysis_results.csv')
-        except FileNotFoundError:
-            st.error("Data files not found. Please ensure the CSV files are in the same directory as this script.")
-            return None
-    
-    # Clean and preprocess data
-    df = df.copy()
-    
-    # Convert numeric columns
-    numeric_cols = ['forest_area_pct', 'gdp_per_capita', 'life_expectancy', 
-                   'physicians_per_1000', 'pm25_air_pollution', 'population_total',
-                   'urban_population_pct', 'infant_mortality', 'life_expectancy_who', 
-                   'maternal_mortality', 'latitude', 'longitude']
-    
-    for col in numeric_cols:
-        if col in df.columns:
-            df[col] = pd.to_numeric(df[col], errors='coerce')
-    
-    # Create Blue Zone indicator
-    df['zone_type'] = df['is_blue_zone'].map({1: 'Blue Zone', 0: 'Regular Zone'})
-    
-    # Fill missing values for key metrics
-    df['life_expectancy_combined'] = df['life_expectancy'].fillna(df['life_expectancy_who'])
-    
-    return df
+def load_historical():
+    path = os.path.join(SCRIPT_DIR, "data", "historical", "merged_historical_panel.csv")
+    if not os.path.exists(path):
+        return pd.DataFrame()
+    return pd.read_csv(path)
 
-def create_kpi_metrics(df):
-    """Create KPI metrics for the dashboard"""
-    blue_zones = df[df['is_blue_zone'] == 1]
-    regular_zones = df[df['is_blue_zone'] == 0]
-    
-    # Calculate key metrics
-    bz_life_exp = blue_zones['life_expectancy_combined'].mean()
-    reg_life_exp = regular_zones['life_expectancy_combined'].mean()
-    
-    bz_infant_mort = blue_zones['infant_mortality'].mean()
-    reg_infant_mort = regular_zones['infant_mortality'].mean()
-    
-    bz_maternal_mort = blue_zones['maternal_mortality'].mean()
-    reg_maternal_mort = regular_zones['maternal_mortality'].mean()
-    
-    bz_forest = blue_zones['forest_area_pct'].mean()
-    reg_forest = regular_zones['forest_area_pct'].mean()
-    
-    return {
-        'blue_zones_count': len(blue_zones),
-        'total_countries': len(df),
-        'bz_life_exp': bz_life_exp,
-        'reg_life_exp': reg_life_exp,
-        'life_exp_advantage': bz_life_exp - reg_life_exp,
-        'bz_infant_mort': bz_infant_mort,
-        'reg_infant_mort': reg_infant_mort,
-        'bz_maternal_mort': bz_maternal_mort,
-        'reg_maternal_mort': reg_maternal_mort,
-        'bz_forest': bz_forest,
-        'reg_forest': reg_forest
-    }
 
-def create_world_map(df):
-    """Create interactive world map showing Blue Zones"""
-    # Filter out rows with missing coordinates and life expectancy
-    df_map = df.dropna(subset=['latitude', 'longitude', 'life_expectancy_combined'])
-    
-    # Ensure life expectancy values are positive for sizing
-    df_map = df_map[df_map['life_expectancy_combined'] > 0]
-    
-    fig = px.scatter_mapbox(
-        df_map, 
-        lat="latitude", 
-        lon="longitude",
-        color="zone_type",
-        size="life_expectancy_combined",
-        hover_name="country_name",
-        hover_data={
-            'zone_type': True,
-            'blue_zone_region': True,
-            'life_expectancy_combined': ':.1f',
-            'infant_mortality': ':.1f',
-            'maternal_mortality': ':.1f',
-            'physicians_per_1000': ':.2f',
-            'forest_area_pct': ':.1f',
-            'pm25_air_pollution': ':.1f',
-            'gdp_per_capita': ':,.0f',
-            'urban_population_pct': ':.1f'
-        },
-        size_max=30,
-        color_discrete_map={
-            'Blue Zone': '#2E8B57',
-            'Regular Zone': '#4682B4'
-        },
-        mapbox_style="open-street-map",
-        zoom=1,
-        height=600,
-        title="Global Blue Zones & Longevity Hotspots"
-    )
-    
-    fig.update_layout(
-        mapbox_center={"lat": 0, "lon": 0},
-        margin={"r": 0, "t": 50, "l": 0, "b": 0}
-    )
-    
-    return fig
+@st.cache_data
+def load_projections():
+    path = os.path.join(SCRIPT_DIR, "data", "projections", "un_life_expectancy_projections.csv")
+    if not os.path.exists(path):
+        return pd.DataFrame()
+    return pd.read_csv(path)
 
-def create_longevity_comparison(df):
-    """Create longevity comparison chart"""
-    fig = px.box(
-        df, 
-        x="zone_type", 
-        y="life_expectancy_combined",
-        color="zone_type",
-        color_discrete_map={
-            'Blue Zone': '#2E8B57',
-            'Regular Zone': '#4682B4'
-        },
-        title="Life Expectancy Distribution: Blue Zones vs Regular Zones",
-        points="all"
-    )
-    
-    fig.update_layout(
-        xaxis_title="Zone Type",
-        yaxis_title="Life Expectancy (Years)",
-        height=400
-    )
-    
-    return fig
 
-def create_health_metrics_radar(df):
-    """Create radar chart for health metrics comparison"""
-    blue_zones = df[df['is_blue_zone'] == 1]
-    regular_zones = df[df['is_blue_zone'] == 0]
-    
-    # Calculate averages (invert negative metrics for radar display)
-    metrics = {
-        'Life Expectancy': [
-            blue_zones['life_expectancy_combined'].mean(),
-            regular_zones['life_expectancy_combined'].mean()
-        ],
-        'Forest Coverage': [
-            blue_zones['forest_area_pct'].mean(),
-            regular_zones['forest_area_pct'].mean()
-        ],
-        'Physicians per 1000': [
-            blue_zones['physicians_per_1000'].mean() * 20,  # Scale for visibility
-            regular_zones['physicians_per_1000'].mean() * 20
-        ],
-        'Low Infant Mortality': [
-            100 - blue_zones['infant_mortality'].mean(),  # Invert for radar
-            100 - regular_zones['infant_mortality'].mean()
-        ],
-        'Clean Air Quality': [
-            100 - blue_zones['pm25_air_pollution'].mean(),  # Invert for radar
-            100 - regular_zones['pm25_air_pollution'].mean()
-        ]
-    }
-    
+@st.cache_data
+def load_analysis(name):
+    path = os.path.join(SCRIPT_DIR, "outputs", "analysis", f"{name}.csv")
+    if not os.path.exists(path):
+        return pd.DataFrame()
+    return pd.read_csv(path)
+
+
+@st.cache_data
+def load_cross_section():
+    path = os.path.join(SCRIPT_DIR, "real_world_blue_zones_comprehensive.csv")
+    if not os.path.exists(path):
+        return pd.DataFrame()
+    return pd.read_csv(path)
+
+
+# ---------------------------------------------------------------------------
+# Chart builders
+# ---------------------------------------------------------------------------
+def fig_historical_timelines(hist, proj, selected_isos):
+    """Life expectancy 1960-2100 for selected countries."""
     fig = go.Figure()
-    
-    # Blue Zones
-    fig.add_trace(go.Scatterpolar(
-        r=[metrics[key][0] for key in metrics.keys()],
-        theta=list(metrics.keys()),
-        fill='toself',
-        name='Blue Zones',
-        line_color='#2E8B57'
+
+    # Global average
+    global_avg = hist.groupby("year")["life_expectancy"].mean().dropna()
+    fig.add_trace(go.Scatter(
+        x=global_avg.index, y=global_avg.values,
+        mode="lines", name="Global Average",
+        line=dict(color="#95a5a6", width=3, dash="dot"),
     ))
-    
-    # Regular Zones
-    fig.add_trace(go.Scatterpolar(
-        r=[metrics[key][1] for key in metrics.keys()],
-        theta=list(metrics.keys()),
-        fill='toself',
-        name='Regular Zones',
-        line_color='#4682B4'
+
+    for iso in selected_isos:
+        color = BZ_COLORS.get(iso, "#333")
+        label = BZ_NAMES.get(iso, iso)
+
+        # Historical
+        ch = hist[hist["iso_code"] == iso].sort_values("year")
+        le = ch[["year", "life_expectancy"]].dropna()
+        if not le.empty:
+            fig.add_trace(go.Scatter(
+                x=le["year"], y=le["life_expectancy"],
+                mode="lines", name=label,
+                line=dict(color=color, width=2.5),
+            ))
+
+        # Projections
+        if not proj.empty:
+            cp = proj[proj["iso_code"] == iso].sort_values("year")
+            if not cp.empty and "le_medium" in cp.columns:
+                fig.add_trace(go.Scatter(
+                    x=cp["year"], y=cp["le_medium"],
+                    mode="lines", name=f"{label} (projected)",
+                    line=dict(color=color, width=2, dash="dash"),
+                    showlegend=False,
+                ))
+                if "le_high" in cp.columns and "le_low" in cp.columns:
+                    fig.add_trace(go.Scatter(
+                        x=pd.concat([cp["year"], cp["year"][::-1]]),
+                        y=pd.concat([cp["le_high"], cp["le_low"][::-1]]),
+                        fill="toself", fillcolor=color, opacity=0.08,
+                        line=dict(width=0), showlegend=False, name="",
+                    ))
+
+    fig.add_vline(x=2023, line_dash="dot", line_color="grey", opacity=0.5)
+    fig.update_layout(
+        title="Life Expectancy Over Time (1960-2100)",
+        xaxis_title="Year", yaxis_title="Life Expectancy at Birth (years)",
+        height=520, template="plotly_white",
+        legend=dict(orientation="h", yanchor="bottom", y=-0.25),
+    )
+    return fig
+
+
+def fig_convergence(bz_global, sigma):
+    """Two-panel convergence chart."""
+    fig = make_subplots(rows=2, cols=1, shared_xaxes=True,
+                        subplot_titles=["Blue Zone Countries vs Global Average: Gap",
+                                        "Sigma Convergence: Global Spread of Life Expectancy"],
+                        vertical_spacing=0.12)
+
+    if not bz_global.empty:
+        gap = bz_global["bz_gap_over_global"]
+        fig.add_trace(go.Scatter(
+            x=bz_global["year"], y=gap, fill="tozeroy",
+            mode="lines", name="BZ advantage (years)",
+            line=dict(color="#2ecc71", width=2),
+            fillcolor="rgba(46,204,113,0.2)",
+        ), row=1, col=1)
+
+    if not sigma.empty:
+        fig.add_trace(go.Scatter(
+            x=sigma["year"], y=sigma["le_std"],
+            mode="lines", name="Std Dev across countries",
+            line=dict(color="#8e44ad", width=2),
+            fill="tozeroy", fillcolor="rgba(142,68,173,0.12)",
+        ), row=2, col=1)
+
+    fig.update_layout(height=600, template="plotly_white",
+                      legend=dict(orientation="h", yanchor="bottom", y=-0.15))
+    fig.update_yaxes(title_text="Gap (years)", row=1, col=1)
+    fig.update_yaxes(title_text="Std Dev (years)", row=2, col=1)
+    return fig
+
+
+def fig_decade_bars(decades):
+    """Improvement rates by decade."""
+    if decades.empty:
+        return go.Figure()
+
+    decade_list = decades[decades["group"] == "global"]["decade"].tolist()
+    fig = go.Figure()
+
+    for group, color, label in [
+        ("blue_zone", "#3498DB", "Blue Zone Countries"),
+        ("non_blue_zone", "#bdc3c7", "Non-Blue Zone Countries"),
+    ]:
+        grp = decades[decades["group"] == group]
+        vals = [grp[grp["decade"] == d]["avg_gain"].values[0]
+                if len(grp[grp["decade"] == d]) else 0 for d in decade_list]
+        fig.add_trace(go.Bar(x=decade_list, y=vals, name=label,
+                             marker_color=color, text=[f"{v:.1f}" for v in vals],
+                             textposition="outside"))
+
+    fig.update_layout(
+        title="Life Expectancy Gain by Decade",
+        xaxis_title="Decade", yaxis_title="Average LE Gain (years)",
+        barmode="group", height=420, template="plotly_white",
+    )
+    return fig
+
+
+def fig_ranking(hist):
+    """Blue Zone country percentile ranking over time."""
+    le_data = hist[["iso_code", "year", "life_expectancy"]].dropna()
+    rows = []
+    for year in sorted(le_data["year"].unique()):
+        yd = le_data[le_data["year"] == year].copy()
+        yd["rank"] = yd["life_expectancy"].rank(ascending=False)
+        total = len(yd)
+        for iso in BZ_COLORS:
+            r = yd[yd["iso_code"] == iso]
+            if not r.empty:
+                rows.append({"year": year, "iso_code": iso,
+                             "percentile": (1 - r["rank"].iloc[0] / total) * 100})
+    if not rows:
+        return go.Figure()
+    rdf = pd.DataFrame(rows)
+    fig = go.Figure()
+    for iso in sorted(BZ_COLORS):
+        cr = rdf[rdf["iso_code"] == iso].sort_values("year")
+        fig.add_trace(go.Scatter(
+            x=cr["year"], y=cr["percentile"], mode="lines+markers",
+            name=BZ_NAMES[iso], line=dict(color=BZ_COLORS[iso], width=2),
+            marker=dict(size=4),
+        ))
+    fig.add_hline(y=50, line_dash="dash", line_color="grey", opacity=0.3)
+    fig.update_layout(
+        title="Blue Zone Countries: Global LE Percentile Ranking",
+        xaxis_title="Year", yaxis_title="Percentile (higher = longer-lived)",
+        yaxis_range=[0, 105], height=450, template="plotly_white",
+    )
+    return fig
+
+
+def fig_country_detail(hist, proj, iso):
+    """Two-panel deep dive for a single country."""
+    fig = make_subplots(rows=2, cols=1, shared_xaxes=False,
+                        subplot_titles=[f"{BZ_NAMES.get(iso, iso)}: Life Expectancy",
+                                        f"{BZ_NAMES.get(iso, iso)}: GDP per Capita"],
+                        vertical_spacing=0.15)
+    ch = hist[hist["iso_code"] == iso].sort_values("year")
+    le = ch[["year", "life_expectancy"]].dropna()
+    if not le.empty:
+        fig.add_trace(go.Scatter(
+            x=le["year"], y=le["life_expectancy"], mode="lines",
+            name="Historical LE", line=dict(color=BZ_COLORS.get(iso, "#333"), width=2.5),
+        ), row=1, col=1)
+    if not proj.empty:
+        cp = proj[proj["iso_code"] == iso].sort_values("year")
+        if not cp.empty and "le_medium" in cp.columns:
+            fig.add_trace(go.Scatter(
+                x=cp["year"], y=cp["le_medium"], mode="lines",
+                name="Projected (medium)", line=dict(color=BZ_COLORS.get(iso, "#333"), width=2, dash="dash"),
+            ), row=1, col=1)
+            if "le_high" in cp.columns:
+                fig.add_trace(go.Scatter(
+                    x=pd.concat([cp["year"], cp["year"][::-1]]),
+                    y=pd.concat([cp["le_high"], cp["le_low"][::-1]]),
+                    fill="toself", fillcolor=BZ_COLORS.get(iso, "#333"),
+                    opacity=0.08, line=dict(width=0), showlegend=False, name="",
+                ), row=1, col=1)
+    gdp = ch[["year", "gdp_per_capita"]].dropna()
+    if not gdp.empty:
+        fig.add_trace(go.Scatter(
+            x=gdp["year"], y=gdp["gdp_per_capita"], mode="lines",
+            name="GDP per capita", line=dict(color="#f39c12", width=2),
+            fill="tozeroy", fillcolor="rgba(243,156,18,0.1)",
+        ), row=2, col=1)
+    fig.update_layout(height=600, template="plotly_white")
+    fig.update_yaxes(title_text="Life Expectancy (years)", row=1, col=1)
+    fig.update_yaxes(title_text="GDP per Capita (USD)", row=2, col=1)
+    return fig
+
+
+def fig_world_map(cross):
+    """World map from cross-sectional data."""
+    if cross.empty:
+        return go.Figure()
+    df_map = cross.dropna(subset=["latitude", "longitude"]).copy()
+    df_map["zone_type"] = df_map["is_blue_zone"].map({1: "Blue Zone", 0: "Regular"})
+    le_col = "life_expectancy"
+    if le_col not in df_map.columns or df_map[le_col].isna().all():
+        for alt in ["life_expectancy_who"]:
+            if alt in df_map.columns:
+                df_map[le_col] = df_map[le_col].fillna(df_map[alt])
+    df_map = df_map.dropna(subset=[le_col])
+    fig = px.scatter_geo(
+        df_map, lat="latitude", lon="longitude", color="zone_type",
+        hover_name="country_name", size=le_col, size_max=25,
+        color_discrete_map={"Blue Zone": "#2E8B57", "Regular": "#4682B4"},
+        projection="natural earth",
+        title="Global Life Expectancy (Most Recent Year)",
+    )
+    fig.update_layout(height=480, template="plotly_white",
+                      geo=dict(showframe=False, showcoastlines=True, coastlinecolor="#ccc"))
+    return fig
+
+
+def fig_heatmap(hist):
+    """Life expectancy heatmap: countries x years."""
+    le = hist[["iso_code", "year", "life_expectancy", "country_name", "is_blue_zone"]].dropna(subset=["life_expectancy"])
+    pivot = le.pivot_table(index="iso_code", columns="year", values="life_expectancy", aggfunc="first")
+    last = pivot.columns.max()
+    pivot = pivot.sort_values(by=last, ascending=True, na_position="first")
+    iso_to_name = dict(zip(hist["iso_code"], hist["country_name"]))
+    labels = [f"{iso_to_name.get(i, i)} *" if i in BZ_COLORS else iso_to_name.get(i, i)
+              for i in pivot.index]
+    fig = go.Figure(data=go.Heatmap(
+        z=pivot.values, x=pivot.columns, y=labels,
+        colorscale="RdYlGn", zmin=35, zmax=85,
+        colorbar_title="Life Expectancy",
     ))
-    
     fig.update_layout(
-        polar=dict(
-            radialaxis=dict(
-                visible=True,
-                range=[0, 100]
-            )),
-        showlegend=True,
-        title="Health & Environmental Metrics Comparison",
-        height=500
+        title="Global Life Expectancy Heatmap (1960-2023)  (* = Blue Zone country)",
+        height=max(500, len(labels) * 12), template="plotly_white",
+        xaxis_title="Year",
     )
-    
     return fig
 
-def create_correlation_heatmap(df):
-    """Create correlation heatmap of key variables"""
-    # Select numeric columns for correlation
-    numeric_cols = ['life_expectancy_combined', 'forest_area_pct', 'gdp_per_capita',
-                   'physicians_per_1000', 'pm25_air_pollution', 'infant_mortality',
-                   'maternal_mortality', 'urban_population_pct']
-    
-    df_corr = df[numeric_cols].dropna()
-    correlation_matrix = df_corr.corr()
-    
-    fig = px.imshow(
-        correlation_matrix,
-        title="Correlation Matrix: Health & Environmental Factors",
-        color_continuous_scale="RdBu",
-        aspect="auto",
-        height=500
-    )
-    
-    fig.update_layout(
-        title_x=0.5,
-        xaxis_title="Variables",
-        yaxis_title="Variables"
-    )
-    
+
+def fig_correlation(hist):
+    """Correlation heatmap from most recent year of historical data."""
+    recent = hist.sort_values("year").groupby("iso_code").last().reset_index()
+    cols = ["life_expectancy", "gdp_per_capita", "physicians_per_1000",
+            "urban_population_pct", "pm25_air_pollution", "death_rate",
+            "health_expenditure_pc"]
+    avail = [c for c in cols if c in recent.columns]
+    corr = recent[avail].dropna().corr()
+    fig = px.imshow(corr, color_continuous_scale="RdBu_r", zmin=-1, zmax=1,
+                    title="Correlation Matrix (Most Recent Year)",
+                    text_auto=".2f")
+    fig.update_layout(height=500, template="plotly_white")
     return fig
 
-def create_gdp_life_expectancy_scatter(df):
-    """Create GDP vs Life Expectancy scatter plot"""
-    # Filter out rows with missing required values
-    df_scatter = df.dropna(subset=['gdp_per_capita', 'life_expectancy_combined', 'population_total'])
-    df_scatter = df_scatter[df_scatter['population_total'] > 0]
 
-    fig = px.scatter(
-        df_scatter,
-        x="gdp_per_capita",
-        y="life_expectancy_combined",
-        color="zone_type",
-        # Removed size parameter - all dots same size for visibility
-        hover_data={
-            'country_name': True,
-            'blue_zone_region': True,
-            'population_total': ':,.0f',
-            'zone_type': False  # Hide since it's shown in legend
-        },
-        color_discrete_map={
-            'Blue Zone': '#2E8B57',
-            'Regular Zone': '#4682B4'
-        },
-        title="Economic Development vs Life Expectancy",
-        labels={
-            'gdp_per_capita': 'GDP per Capita (USD)',
-            'life_expectancy_combined': 'Life Expectancy (Years)',
-            'population_total': 'Population'
-        }
-    )
-
-    # Make all markers larger and uniform size
-    fig.update_traces(marker=dict(size=10, line=dict(width=1, color='white')))
-
-    fig.update_layout(height=500)
-
-    return fig
-
+# ---------------------------------------------------------------------------
+# Main application
+# ---------------------------------------------------------------------------
 def main():
-    """Main dashboard application"""
-    # Header
-    st.markdown('<h1 class="main-header">Blue Zones Longevity Analysis Dashboard</h1>', 
-                unsafe_allow_html=True)
-    
-    st.markdown("""
-    <div style="text-align: center; margin-bottom: 2rem;">
-        <p style="font-size: 1.2rem; color: #666;">
-            Exploring the secrets of longevity through data-driven analysis of the world's healthiest regions
-        </p>
-    </div>
-    """, unsafe_allow_html=True)
-    
-    # Load data
-    df = load_data()
-    if df is None:
+    # Load all datasets
+    hist = load_historical()
+    proj = load_projections()
+    bz_global = load_analysis("blue_zone_vs_global")
+    sigma = load_analysis("sigma_convergence")
+    beta = load_analysis("beta_convergence")
+    decades = load_analysis("decade_improvements")
+    cross = load_cross_section()
+
+    if hist.empty:
+        st.error("Historical data not found. Run historical_data_collector.py first.")
         return
-    
-    # Top filter bar
-    st.markdown('<h2 class="section-header">Filters</h2>', unsafe_allow_html=True)
-    with st.container():
-        c1, c2, c3 = st.columns([2, 3, 2])
-        zone_filter = c1.multiselect(
-            "Zone Types",
-            options=['Blue Zone', 'Regular Zone'],
-            default=['Blue Zone', 'Regular Zone']
-        )
-        countries = c2.multiselect(
-            "Countries (Optional)",
-            options=sorted(df['country_name'].unique()),
-            default=[]
-        )
-        show_blue_info = c3.toggle("Show Blue Zones Info", value=False)
-    
-    # Data filtering
-    if zone_filter:
-        df_filtered = df[df['zone_type'].isin(zone_filter)]
-    else:
-        df_filtered = df
-        
-    if countries:
-        df_filtered = df_filtered[df_filtered['country_name'].isin(countries)]
-    
-    if show_blue_info:
-        with st.expander("About Blue Zones", expanded=False):
-            st.markdown("""
-            <div class="sidebar-info">
-            <strong>The 5 Blue Zones:</strong><br>
-            Loma Linda, California<br>
-            Okinawa, Japan<br>
-            Sardinia, Italy<br>
-            Ikaria, Greece<br>
-            Nicoya Peninsula, Costa Rica
-            </div>
-            """, unsafe_allow_html=True)
-    
-    # KPI Section
-    st.markdown('<h2 class="section-header">Key Performance Indicators</h2>', 
+
+    # --- Sidebar ---
+    st.sidebar.title("Blue Zones Analysis")
+    st.sidebar.markdown("---")
+    page = st.sidebar.radio("Section", [
+        "Overview",
+        "Historical Trends",
+        "Convergence Analysis",
+        "Country Deep Dives",
+        "Projections",
+        "Data Explorer",
+    ])
+
+    # Country filter for timelines
+    bz_isos = sorted(BZ_COLORS.keys())
+    all_isos = sorted(hist["iso_code"].unique())
+
+    st.sidebar.markdown("---")
+    st.sidebar.markdown("**Data Sources**")
+    st.sidebar.markdown(
+        "World Bank API (1960-2023)\n\n"
+        "WHO Global Health Observatory\n\n"
+        "All real data -- no synthetic"
+    )
+
+    # --- Header ---
+    st.markdown('<h1 class="main-header">Blue Zones Longevity Analysis</h1>', unsafe_allow_html=True)
+    st.markdown('<p class="sub-header">Historical Trends, Convergence, and Future Projections -- Built on Real Data</p>',
                 unsafe_allow_html=True)
-    
-    kpis = create_kpi_metrics(df_filtered)
-    
-    col1, col2, col3, col4 = st.columns(4)
-    
-    with col1:
-        st.metric(
-            "Blue Zones Identified",
-            f"{kpis['blue_zones_count']}",
-            delta=f"of {kpis['total_countries']} countries"
+
+    # ===== OVERVIEW =====
+    if page == "Overview":
+        # KPIs
+        n_countries = hist["iso_code"].nunique()
+        yr_min, yr_max = int(hist["year"].min()), int(hist["year"].max())
+        n_rows = len(hist)
+
+        recent = bz_global[bz_global["year"] >= 2019].iloc[-1] if not bz_global.empty and len(bz_global[bz_global["year"] >= 2019]) > 0 else None
+        early = bz_global[bz_global["year"] <= 1965].iloc[0] if not bz_global.empty and len(bz_global[bz_global["year"] <= 1965]) > 0 else None
+
+        c1, c2, c3, c4 = st.columns(4)
+        c1.metric("Countries", n_countries)
+        c2.metric("Years Covered", f"{yr_min} - {yr_max}")
+        c3.metric("Data Points", f"{n_rows:,}")
+        if recent is not None:
+            c4.metric("BZ Gap (current)", f"+{recent['bz_gap_over_global']:.1f} years")
+
+        st.markdown("---")
+
+        col1, col2 = st.columns(2)
+        with col1:
+            if not cross.empty:
+                st.plotly_chart(fig_world_map(cross), use_container_width=True)
+            else:
+                st.info("Cross-sectional data file not found.")
+        with col2:
+            st.plotly_chart(fig_historical_timelines(hist, proj, bz_isos), use_container_width=True)
+
+        # Key findings table
+        if not bz_global.empty:
+            st.markdown('<h3 class="section-hdr">Key Findings at a Glance</h3>', unsafe_allow_html=True)
+            key_years = bz_global[bz_global["year"].isin([1960, 1980, 2000, 2020])]
+            if not key_years.empty:
+                display = key_years[["year", "blue_zone_mean", "global_mean", "bz_gap_over_global", "n_countries"]].copy()
+                display.columns = ["Year", "BZ Country Avg", "Global Avg", "Gap (years)", "Countries"]
+                display = display.round(1)
+                st.dataframe(display, use_container_width=True, hide_index=True)
+
+    # ===== HISTORICAL TRENDS =====
+    elif page == "Historical Trends":
+        st.markdown('<h3 class="section-hdr">Life Expectancy Over Time</h3>', unsafe_allow_html=True)
+
+        selected = st.multiselect(
+            "Select countries to display",
+            options=all_isos,
+            default=bz_isos,
+            format_func=lambda x: BZ_NAMES.get(x, hist[hist["iso_code"] == x]["country_name"].iloc[0]
+                                                if len(hist[hist["iso_code"] == x]) > 0 else x),
         )
-    
-    with col2:
-        st.metric(
-            "Blue Zones Life Expectancy",
-            f"{kpis['bz_life_exp']:.1f} years",
-            delta=f"+{kpis['life_exp_advantage']:.1f} vs regular zones"
+        if selected:
+            st.plotly_chart(fig_historical_timelines(hist, proj, selected), use_container_width=True)
+
+        st.markdown('<h3 class="section-hdr">Global Heatmap</h3>', unsafe_allow_html=True)
+        st.plotly_chart(fig_heatmap(hist), use_container_width=True)
+
+        st.markdown('<h3 class="section-hdr">Global Ranking Over Time</h3>', unsafe_allow_html=True)
+        st.plotly_chart(fig_ranking(hist), use_container_width=True)
+
+    # ===== CONVERGENCE =====
+    elif page == "Convergence Analysis":
+        st.markdown('<h3 class="section-hdr">Is the World Catching Up?</h3>', unsafe_allow_html=True)
+        st.markdown(
+            "The Blue Zone country advantage has been **shrinking** since 1960. "
+            "The gap narrowed from ~10 years to ~6 years as the rest of the world improved faster."
         )
-    
-    with col3:
-        st.metric(
-            "Blue Zones Infant Mortality",
-            f"{kpis['bz_infant_mort']:.1f}‰",
-            delta=f"{kpis['bz_infant_mort'] - kpis['reg_infant_mort']:.1f}‰ vs regular"
-        )
-    
-    with col4:
-        st.metric(
-            "Blue Zones Forest Coverage",
-            f"{kpis['bz_forest']:.1f}%",
-            delta=f"+{kpis['bz_forest'] - kpis['reg_forest']:.1f}% vs regular"
-        )
-    
-    # World Map
-    st.markdown('<h2 class="section-header">Global Blue Zones Map</h2>', 
-                unsafe_allow_html=True)
-    
-    world_map = create_world_map(df_filtered)
-    st.plotly_chart(world_map, use_container_width=True)
-    
-    # Health Analysis Section
-    st.markdown('<h2 class="section-header">Health & Longevity Analysis</h2>', 
-                unsafe_allow_html=True)
-    
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        longevity_chart = create_longevity_comparison(df_filtered)
-        st.plotly_chart(longevity_chart, use_container_width=True)
-    
-    with col2:
-        radar_chart = create_health_metrics_radar(df_filtered)
-        st.plotly_chart(radar_chart, use_container_width=True)
-    
-    # Economic Analysis
-    st.markdown('<h2 class="section-header">Economic & Environmental Factors</h2>', 
-                unsafe_allow_html=True)
-    
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        gdp_scatter = create_gdp_life_expectancy_scatter(df_filtered)
-        st.plotly_chart(gdp_scatter, use_container_width=True)
-    
-    with col2:
-        correlation_heatmap = create_correlation_heatmap(df_filtered)
-        st.plotly_chart(correlation_heatmap, use_container_width=True)
-    
-    # Data Table
-    st.markdown('<h2 class="section-header">Detailed Data Explorer</h2>', 
-                unsafe_allow_html=True)
-    
-    # Display options
-    show_blue_zones_only = st.checkbox("Show Blue Zones Only")
-    if show_blue_zones_only:
-        display_df = df_filtered[df_filtered['is_blue_zone'] == 1]
-    else:
-        display_df = df_filtered
-    
-    # Select columns to display
-    display_cols = ['country_name', 'zone_type', 'blue_zone_region', 
-                   'life_expectancy_combined', 'infant_mortality', 'maternal_mortality',
-                   'gdp_per_capita', 'forest_area_pct', 'pm25_air_pollution']
-    
-    display_df_clean = display_df[display_cols].round(2)
-    st.dataframe(display_df_clean, use_container_width=True, height=400)
-    
-    # Insights Section
-    st.markdown('<h2 class="section-header">Key Insights</h2>', 
-                unsafe_allow_html=True)
-    
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        st.markdown("""
-        <div class="blue-zone-highlight" style="color: #2c3e50;">
-        <h4 style="color: #2E8B57; font-weight: bold;">Blue Zones Advantages</h4>
-        <ul style="color: #2c3e50; font-weight: 500;">
-        <li>Higher life expectancy by ~6+ years</li>
-        <li>Lower infant mortality rates</li>
-        <li>Better air quality on average</li>
-        <li>Higher forest coverage</li>
-        <li>More balanced healthcare access</li>
-        </ul>
-        </div>
-        """, unsafe_allow_html=True)
-    
-    with col2:
-        st.markdown("""
-        <div class="metric-container" style="color: #2c3e50;">
-        <h4 style="color: #4682B4; font-weight: bold;">Statistical Findings</h4>
-        <ul style="color: #2c3e50; font-weight: 500;">
-        <li>5 Blue Zones identified globally</li>
-        <li>Strong correlation between environment and health</li>
-        <li>GDP doesn't guarantee longevity</li>
-        <li>Forest coverage linked to life expectancy</li>
-        <li>Traditional lifestyle patterns matter</li>
-        </ul>
-        </div>
-        """, unsafe_allow_html=True)
-    
+        st.plotly_chart(fig_convergence(bz_global, sigma), use_container_width=True)
+
+        col1, col2 = st.columns(2)
+        with col1:
+            st.markdown('<h3 class="section-hdr">Improvement by Decade</h3>', unsafe_allow_html=True)
+            st.plotly_chart(fig_decade_bars(decades), use_container_width=True)
+        with col2:
+            st.markdown('<h3 class="section-hdr">Beta Convergence</h3>', unsafe_allow_html=True)
+            if not beta.empty:
+                st.dataframe(beta[["decade", "avg_gain_years", "bz_avg_gain",
+                                   "non_bz_avg_gain", "convergence"]].rename(columns={
+                    "decade": "Decade", "avg_gain_years": "Global Gain",
+                    "bz_avg_gain": "BZ Gain", "non_bz_avg_gain": "Non-BZ Gain",
+                    "convergence": "Convergence?",
+                }).round(1), use_container_width=True, hide_index=True)
+
+    # ===== COUNTRY DEEP DIVES =====
+    elif page == "Country Deep Dives":
+        st.markdown('<h3 class="section-hdr">Blue Zone Country Profiles</h3>', unsafe_allow_html=True)
+        iso_pick = st.selectbox("Select country", bz_isos,
+                                format_func=lambda x: BZ_NAMES.get(x, x))
+        st.plotly_chart(fig_country_detail(hist, proj, iso_pick), use_container_width=True)
+
+        # Stats table
+        ch = hist[hist["iso_code"] == iso_pick]
+        le = ch["life_expectancy"].dropna()
+        if not le.empty:
+            st.markdown(f"**Life expectancy range:** {le.min():.1f} - {le.max():.1f} years  "
+                        f"(total gain: {le.max() - le.min():.1f} years)")
+        gdp = ch["gdp_per_capita"].dropna()
+        if not gdp.empty:
+            st.markdown(f"**GDP per capita range:** ${gdp.min():,.0f} - ${gdp.max():,.0f}")
+
+    # ===== PROJECTIONS =====
+    elif page == "Projections":
+        st.markdown('<h3 class="section-hdr">Future Projections (to 2100)</h3>', unsafe_allow_html=True)
+        if proj.empty:
+            st.warning("No projection data available. Run un_projections_collector.py.")
+        else:
+            source = proj["projection_source"].iloc[0] if "projection_source" in proj.columns else "Unknown"
+            st.markdown(f"**Source:** {source}")
+            st.plotly_chart(fig_historical_timelines(hist, proj, bz_isos), use_container_width=True)
+
+            st.markdown('<h3 class="section-hdr">2050 Projections</h3>', unsafe_allow_html=True)
+            p2050 = proj[proj["year"] == 2050][["country_name", "le_medium", "le_high", "le_low"]].copy()
+            if "is_blue_zone" in proj.columns:
+                p2050_bz = proj[(proj["year"] == 2050) & (proj["is_blue_zone"] == 1)]
+                p2050 = p2050_bz[["country_name", "le_medium", "le_high", "le_low"]].copy()
+            p2050.columns = ["Country", "Medium", "High", "Low"]
+            if not p2050.empty:
+                st.dataframe(p2050.round(1), use_container_width=True, hide_index=True)
+
+    # ===== DATA EXPLORER =====
+    elif page == "Data Explorer":
+        st.markdown('<h3 class="section-hdr">Raw Data Explorer</h3>', unsafe_allow_html=True)
+
+        tab1, tab2, tab3 = st.tabs(["Historical Panel", "Projections", "Correlations"])
+
+        with tab1:
+            year_range = st.slider("Year range", int(hist["year"].min()), int(hist["year"].max()),
+                                   (1960, 2023))
+            filt = hist[(hist["year"] >= year_range[0]) & (hist["year"] <= year_range[1])]
+            bz_only = st.checkbox("Blue Zone countries only")
+            if bz_only:
+                filt = filt[filt["is_blue_zone"] == 1]
+            st.dataframe(filt, use_container_width=True, height=500)
+            st.download_button("Download filtered data", filt.to_csv(index=False),
+                               "historical_filtered.csv", "text/csv")
+
+        with tab2:
+            if not proj.empty:
+                st.dataframe(proj, use_container_width=True, height=500)
+            else:
+                st.info("No projection data available.")
+
+        with tab3:
+            st.plotly_chart(fig_correlation(hist), use_container_width=True)
+
     # Footer
-    st.markdown("""
-    ---
-    <div style="text-align: center; color: #666; margin-top: 2rem;">
-        <p>Blue Zones Longevity Analysis Dashboard | Data Science & Analytics Platform</p>
-        <p>Created with Streamlit & Plotly | Real-world health and demographic data</p>
-    </div>
-    """, unsafe_allow_html=True)
+    st.markdown("---")
+    st.markdown(
+        "<div style='text-align:center;color:#888;font-size:0.85rem'>"
+        "Blue Zones Longevity Analysis | Real-world data from World Bank and WHO APIs"
+        "</div>",
+        unsafe_allow_html=True,
+    )
+
 
 if __name__ == "__main__":
     main()

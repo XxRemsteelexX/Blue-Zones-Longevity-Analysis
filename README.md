@@ -1,109 +1,91 @@
-# Blue Zones Longevity Research Project
+# Blue Zones Longevity Analysis
 
-## Real-World Data Analysis of Global Health Determinants and Blue Zone Patterns
+## Historical Trends (1960-2023) and Future Projections (2024-2100)
 
-[![Research Status](https://img.shields.io/badge/Status-Complete-success)](https://github.com)
 [![Countries](https://img.shields.io/badge/Countries-93-blue)](./data)
-[![Findings](https://img.shields.io/badge/Key%20Finding-Rejected%20Gravity%20Hypothesis-orange)](./Blue_Zones_Real_World_Analysis_Report.md)
-[![Health Data](https://img.shields.io/badge/WHO%20Data%20API-Integrated-green)](./scripts)
-[![Live Dashboard](https://img.shields.io/badge/Live%20Dashboard-Streamlit-red)](https://xxremsteelexx-blue-zones-longevity--blue-zones-dashboard-xgbvew.streamlit.app/)
+[![Years](https://img.shields.io/badge/Years-1960--2023-green)](./data/historical)
+[![Data Points](https://img.shields.io/badge/Observations-5%2C952-informational)](./data/historical/merged_historical_panel.csv)
 
 ---
 
 ## Project Overview
 
-This research investigates potential correlations between Earth's gravitational field variations and human longevity patterns in Blue Zone regions through comprehensive analysis of real-world health data from 93 countries. Blue Zones are five geographic regions where people live measurably longer lives: **Sardinia (Italy)**, **Okinawa (Japan)**, **Nicoya Peninsula (Costa Rica)**, **Ikaria (Greece)**, and **Loma Linda (California, USA)**.
+This project analyzes **60+ years of real-world health and development data** for 93 countries to answer: How have Blue Zone countries changed over time, and what does the future look like?
 
-Using authentic global health statistics sourced from authoritative international organizations including the World Bank and World Health Organization, the gravitational hypothesis is conclusively rejected (r=-0.052, p=0.997), but the research successfully identifies actionable health policy interventions with quantified impact potential.
+Blue Zones are five geographic regions where people live measurably longer lives:
 
-### Key Research Questions
+| Blue Zone Region | Country | Latest LE (country-level) |
+|-----------------|---------|---------------------------|
+| Okinawa | Japan | ~84 years |
+| Sardinia | Italy | ~83 years |
+| Ikaria | Greece | ~80 years |
+| Nicoya Peninsula | Costa Rica | ~79 years |
+| Loma Linda, CA | United States | ~78 years |
 
-1. Do Earth's gravitational field variations correlate with Blue Zone longevity patterns?
-2. What factors distinguish Blue Zones from other regions globally?
-3. Which longevity determinants are actionable through public health policy?
+**Important limitation:** Blue Zones are specific *regions* within countries, not entire countries. All public API data is country-level. Japan's national life expectancy does not equal Okinawa's specifically. This analysis tracks "countries containing Blue Zones" because sub-national historical time series are not available from public APIs.
 
----
+### Key Findings
 
-## Major Findings
-
-### Primary Results (Real-World Data - 93 Countries)
-
-| Finding | Value | Significance |
-|---------|-------|--------------|
-| **Blue Zone Life Expectancy Advantage** | +3.4 years | Costa Rica validation |
-| **Gravity-Longevity Correlation** | r = -0.052 | p = 0.997 (NS) |
-| **Countries Analyzed** | 93 nations | Complete geographic data |
-| **Healthcare Access Correlation** | r = +0.761 | p < 0.001 ✓✓✓ |
-| **GDP per Capita Correlation** | r = +0.741 | p < 0.001 ✓✓✓ |
-| **PM2.5 Air Pollution Correlation** | r = -0.648 | p < 0.001 ✓✓✓ |
-
-### Actionable vs Non-Actionable Factors
-
-**Actionable (Modifiable) Factors:**
-- Healthcare access (strongest predictor: r=0.761)
-- GDP per capita (economic development: r=0.741)
-- Air quality (PM2.5 pollution: r=-0.648)
-
-**Non-Actionable (Fixed) Factors:**
-- Gravity deviation (r=-0.052)
-- Latitude (r=0.029)
-- Elevation (r=0.082)
-- Base temperature (r=-0.124)
-
-### Quantified Intervention Impacts
-
-| Intervention | Target | Expected Life Expectancy Gain |
-|-------------|--------|-------------------------------|
-| Increase physician density | 2.5 per 1,000 population | +1.2 years |
-| Enhance social support | 20% increase in index | +0.8 years |
-| Improve air quality | PM2.5 < 15 μg/m³ | +0.6 years |
-| Raise education index | 0.1 point increase | +0.5 years |
+1. **Blue Zone countries currently lead the global average by ~6.4 years** in life expectancy
+2. **The gap is narrowing** -- from ~10 years in the 1960s to ~6.4 years today (global convergence)
+3. **Global convergence confirmed** -- the standard deviation of life expectancy across countries decreased from 11.4 to 6.8 years
+4. **All 5 Blue Zone countries now have 64 years of complete life expectancy data** (the previous version had data for only 1 of 5)
 
 ---
 
-## Methodology
+## Data Sources
 
-### Data Architecture (Real-World API Integration)
+All data is real -- no synthetic or fake data used.
 
-The research integrates data from multiple authoritative sources via direct API access:
-
-- **World Bank Data API**: Life expectancy, GDP per capita, physicians per 1000, PM2.5 air pollution, urban population, forest area
-- **WHO Global Health Observatory API**: Maternal mortality, infant mortality, health system indicators
-- **International Gravity Formula (IGF 1980)**: Physics-based gravity calculations from country coordinates
-- **Geographic Data**: Verified country coordinates for all 93 nations analyzed
-- **Real-time Collection**: Live API calls with rate limiting and error handling
-
-### Analytical Approach
-
-The real-world analysis focuses on statistical methods only:
-
-- Correlation analysis (Pearson)
-- Group comparisons (t-tests) where applicable
-- Confidence intervals and p-values reported for all correlations
+| Source | What | Coverage |
+|--------|------|----------|
+| **World Bank API** | Life expectancy, GDP, physicians, air quality, urbanization, health expenditure, death rate, forest area, population | 93 countries, 1960-2023 |
+| **WHO Global Health Observatory** | Infant mortality, maternal mortality, life expectancy (cross-validation) | 93 countries, variable years |
+| **Trend Extrapolation** | Life expectancy projections (Medium/High/Low scenarios) | 93 countries, 2024-2100 |
 
 ---
 
 ## Project Structure
 
 ```
-Blue_Zones/
+Blue-Zones-Longevity-Analysis/
 │
-├── README.md                                           # This file
-├── Blue_Zones_Real_World_Analysis_Report.md           # Comprehensive research paper
-├── REAL_DATA_RESEARCH_SUMMARY.md                      # Analysis summary
-├── real_data_sources.md                               # Data source documentation
+├── README.md
+├── Blue_Zones_Historical_Projection_Report.md     # Full analysis report
+├── Blue_Zones_Real_World_Analysis_Report.md        # Original cross-sectional report
+├── REAL_DATA_RESEARCH_SUMMARY.md                   # Research summary
+│
+├── historical_data_collector.py                    # Pulls 1960-2023 data from WB + WHO APIs
+├── un_projections_collector.py                     # Generates projections to 2100
+├── historical_trend_analysis.py                    # Convergence and trend analysis
+├── projection_visualizer.py                        # Static matplotlib figures
+├── generate_report.py                              # Markdown report generator
+├── verify_data_quality.py                          # Automated data quality checks
+├── blue_zones_dashboard.py                         # Interactive Streamlit dashboard
 │
 ├── data/
-│   ├── real_world_blue_zones_comprehensive.csv        # 93 countries × 20 features
-│   └── real_world_analysis_results.csv                # Analysis outputs
+│   ├── historical/
+│   │   ├── merged_historical_panel.csv             # 5,952 rows -- main dataset
+│   │   ├── wb_historical_raw.csv                   # Raw World Bank data
+│   │   └── who_historical_raw.csv                  # Raw WHO data
+│   └── projections/
+│       └── un_life_expectancy_projections.csv      # 7,161 rows -- projections to 2100
 │
-├── scripts/
-│   ├── improved_real_data_collector.py                # Main data collection class
-│   └── real_data_analysis.py                          # Statistical analysis
+├── notebooks/
+│   ├── 01_Data_Exploration.ipynb                   # Dataset overview and completeness
+│   ├── 02_Historical_Trends.ipynb                  # BZ vs global trends over time
+│   ├── 03_Convergence_Analysis.ipynb               # Sigma and beta convergence
+│   ├── 04_Country_Deep_Dives.ipynb                 # Individual BZ country profiles
+│   └── 05_Projections_Analysis.ipynb               # Future projections to 2100
 │
 └── outputs/
-    ├── blue_zone_profile.txt                          # Summary outputs
-    └── real_data_results.txt                          # Real-world analysis result notes
+    ├── analysis/
+    │   ├── blue_zone_vs_global.csv                 # BZ avg vs global avg per year
+    │   ├── sigma_convergence.csv                   # Global LE spread per year
+    │   ├── beta_convergence.csv                    # Decade-level convergence
+    │   ├── blue_zone_country_profiles.csv          # BZ countries vs regional peers
+    │   └── decade_improvements.csv                 # LE gains per decade by group
+    └── figures/                                    # 25 PNG charts
 ```
 
 ---
@@ -113,121 +95,112 @@ Blue_Zones/
 ### Prerequisites
 
 ```bash
-# Python 3.8+ required
-python --version
-
-# Create virtual environment
-python -m venv blue_zones_env
-source blue_zones_env/bin/activate  # On Windows: blue_zones_env\Scripts\activate
+python --version  # Python 3.8+ required
+pip install pandas numpy matplotlib seaborn plotly scipy scikit-learn requests streamlit
 ```
 
-### Installation
+### Reproduce the Analysis
 
 ```bash
 # Clone the repository
-git clone https://github.com/[username]/blue-zones-research.git
-cd blue-zones-research
+git clone https://github.com/XxRemsteelexX/Blue-Zones-Longevity-Analysis.git
+cd Blue-Zones-Longevity-Analysis
 
-# Install dependencies
-pip install -r requirements.txt
+# Step 1: Collect historical data (calls World Bank + WHO APIs)
+python historical_data_collector.py
+
+# Step 2: Generate projections
+python un_projections_collector.py
+
+# Step 3: Run trend analysis
+python historical_trend_analysis.py
+
+# Step 4: Generate static figures
+python projection_visualizer.py
+
+# Step 5: Generate report
+python generate_report.py
+
+# Step 6: Verify data quality
+python verify_data_quality.py
 ```
 
-### Required Libraries
+### Run the Interactive Dashboard
 
-- **Core Data Science**: pandas, numpy, scipy
-- **API Access**: requests, wbdata
-- **Statistical Analysis**: scipy.stats
-- **Data Processing**: json, csv
-
----
-
-## Running the Analysis
-
-### Interactive Dashboard
-
-The project includes a professional interactive dashboard built with Streamlit:
-
-**[LIVE DASHBOARD - Click Here](https://xxremsteelexx-blue-zones-longevity--blue-zones-dashboard-xgbvew.streamlit.app/)**
-
-**Run Locally:**
 ```bash
-# Install additional dependencies
-pip install streamlit plotly
-
-# Run the interactive dashboard
 streamlit run blue_zones_dashboard.py
 ```
 
-The dashboard features:
-- Interactive world map with Blue Zones locations
-- Key performance indicators and metrics
-- Health and longevity analysis charts
-- Economic and environmental factor correlations
-- Data filtering and exploration tools
+The dashboard includes:
+- Overview with key metrics
+- Historical trends (BZ countries vs global average, 1960-2023)
+- Convergence analysis (sigma and beta convergence)
+- Country deep dives (each BZ country vs regional peers)
+- Future projections (2024-2100 with uncertainty bands)
+- Data explorer (filter, download, correlation matrix)
 
-### Real-World Data Collection
+### Run the Notebooks
 
-The current analysis uses real-world data from authoritative APIs:
+All notebooks are pre-executed with outputs embedded. To re-run:
 
 ```bash
-# Activate virtual environment
-source blue_zones_env/bin/activate
-
-# Run the improved data collector
-python scripts/improved_real_data_collector.py
-
-# Run statistical analysis
-python scripts/real_data_analysis.py
+jupyter notebook notebooks/
 ```
 
-### Real-World Analysis Results
+---
 
-```python
-# Key findings from real-world data (93 countries)
-print("Countries Analyzed: 93")
-print("Blue Zone Advantage: +3.4 years (Costa Rica)")
-print("Gravity Correlation: r=-0.052 (p=0.997, not significant)")
-print("Healthcare Access: r=+0.761 (p<0.001, highly significant)")
-print("Air Quality (PM2.5): r=-0.648 (p<0.001, significant)")
-print("GDP per Capita: r=+0.741 (p<0.001, significant)")
-```
+## Analysis Methods
 
+| Method | Question Answered |
+|--------|-------------------|
+| **Gap Analysis** | How far ahead are Blue Zone countries? (BZ avg minus global avg per year) |
+| **Sigma Convergence** | Is the world becoming more equal? (SD of LE across countries over time) |
+| **Beta Convergence** | Do lagging countries catch up faster? (initial LE vs subsequent gains) |
+| **Decade Improvements** | How many years of LE gained per decade by group? |
+| **Regional Peer Comparison** | How does each BZ country compare to its regional neighbors? |
+| **Trend Extrapolation** | What do projections to 2100 look like? (logistic dampening, uncertainty bands) |
 
 ---
 
+## Results Summary
 
-## Publications and Documentation
+### Blue Zone Gap Over Time
 
-- **[Real-World Analysis Report](./Blue_Zones_Real_World_Analysis_Report.md)**: Comprehensive research paper with real-world data methodology and findings
-- **[Research Summary](./REAL_DATA_RESEARCH_SUMMARY.md)**: Executive summary of real-world data analysis results
-- **[Data Sources Documentation](./real_data_sources.md)**: Complete API and data source documentation
+| Decade | BZ Country Avg | Global Avg | Gap |
+|--------|---------------|------------|-----|
+| 1960s  | ~68 years     | ~58 years  | ~10 |
+| 1980s  | ~75 years     | ~65 years  | ~10 |
+| 2000s  | ~79 years     | ~71 years  | ~8  |
+| 2020s  | ~82 years     | ~75 years  | ~6  |
+
+The world is converging toward Blue Zone levels. The gap narrowed by ~4 years over 60 years, driven by faster improvements in developing countries.
+
+### Data Quality
+
+- 33 automated checks passed, 1 warning, 0 failures
+- All 5 Blue Zone countries: 100% life expectancy coverage (64 years each)
+- Life expectancy values all within expected range (25-95 years)
+- No impossible year-to-year jumps detected
 
 ---
 
-## Future Directions
+## Limitations
 
-1. **Longitudinal Studies**: Track Blue Zone characteristics over 20+ years
-2. **Intervention Trials**: Test identified factors in pilot communities
-3. **Machine Learning Expansion**: Deep learning for discovering new Blue Zones
-4. **Biological Mechanisms**: Epigenetic studies of longevity factors
-5. **Climate Integration**: Model climate change impacts on Blue Zones
-
----
+1. **Country-level vs region-level:** Blue Zones are specific communities, not countries. Okinawa differs from Japan's national average.
+2. **Data gaps:** Some indicators (PM2.5, health expenditure) only available from ~2000 onward.
+3. **Projection uncertainty:** Trend extrapolations are model outputs, not predictions. The UN Population Division API was unavailable at collection time.
+4. **No causal claims:** All analysis is observational. Correlations do not prove causation.
+5. **Sample bias:** The 93-country sample skews toward larger countries with better statistical infrastructure.
 
 ---
 
 ## Acknowledgments
 
 - **Dan Buettner** and National Geographic for Blue Zones identification
-- **International Gravimetric Bureau** for gravitational field data
+- **World Bank** for socioeconomic indicator APIs
 - **World Health Organization** for global health statistics
-- **World Bank** for socioeconomic indicators
-- **UN Population Division** for demographic data
+- **UN Population Division** for demographic methodology
 
 ---
 
----
-
-*Last Updated: September 2025*
-
-**Research Status:** Complete | **Primary Hypothesis:** Rejected | **Scientific Value:** High | **Policy Impact:** Actionable
+*Last Updated: February 2026*
