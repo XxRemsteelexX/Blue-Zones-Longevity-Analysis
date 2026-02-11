@@ -66,6 +66,11 @@ jupyter_config/
 !requirements.txt
 !environment.yml
 
+# Keep project data files needed by dashboard and notebooks
+!data/historical/*.csv
+!data/projections/*.csv
+!outputs/analysis/*.csv
+
 # Generated outputs
 outputs/data/
 outputs/models/*.pkl
@@ -129,6 +134,8 @@ checkpoints/
 !assets/diagrams/*.png
 !assets/logos/*.png
 !README_images/*.png
+!outputs/figures/*.png
+!outputs/figures/country_deep_dives/*.png
 
 # =============================================================================
 # Environment Variables and Secrets
