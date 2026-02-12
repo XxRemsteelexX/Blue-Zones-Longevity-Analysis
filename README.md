@@ -139,6 +139,18 @@ The US lost nearly two years of life expectancy in a single year and still hasn'
 
 ![BZ COVID Impact](outputs/figures/nb06_bz_covid_impact.png)
 
+### All Blue Zone Countries Overlaid: COVID Years Zoomed
+
+This chart zooms in to 2015-2023 with all five Blue Zone countries overlaid on the same axes. The divergence during COVID is striking -- Japan barely moved while the US cratered.
+
+![BZ Overlay Zoomed](outputs/figures/nb06_bz_overlay_zoomed.png)
+
+### Recovery Trajectory: Change Relative to 2019
+
+This chart normalizes every country to its 2019 level and tracks the path back. Below zero means still worse than pre-COVID. The US never made it back.
+
+![Recovery Trajectory](outputs/figures/nb06_recovery_trajectory.png)
+
 ### What COVID Did to the Convergence Story
 
 Here's where it gets interesting.
@@ -152,6 +164,12 @@ COVID actually **accelerated convergence by 0.5 years**. The gap shrank faster d
 The sigma convergence (global spread) dropped from **6.82 years** in 2019 to **6.36 years** in 2023. Countries are still converging, and the pandemic didn't reverse that trend -- it compressed it further.
 
 ![Gap Comparison](outputs/figures/nb06_gap_comparison.png)
+
+### Trend vs Reality: What 2020-2023 Should Have Been
+
+The green dashed line shows where life expectancy was heading based on the 2000-2019 trend. The red shading shows how far reality fell short. The global average was roughly 1.5 years below its projected trajectory at the worst point.
+
+![Trend vs Reality](outputs/figures/nb06_trend_vs_reality.png)
 
 ### The 2010s Decade (Full Period Only)
 

@@ -475,6 +475,114 @@ def render_comparison_tab(hist_full, impact_df, summary_df,
         fig4.add_hline(y=0, line_color="black", line_width=1)
         st.plotly_chart(fig4, use_container_width=True)
 
+    # COVID years overlay: all BZ countries zoomed
+    st.markdown('<h3 class="section-hdr">Blue Zone Countries: COVID Years Zoomed (2015-2023)</h3>',
+                unsafe_allow_html=True)
+
+    fig_zoom = go.Figure()
+    zoom = hist_full[(hist_full["year"] >= 2015) & (hist_full["year"] <= 2023)]
+    for iso in sorted(BZ_COLORS):
+        cz = zoom[zoom["iso_code"] == iso][["year", "life_expectancy"]].dropna().sort_values("year")
+        if not cz.empty:
+            fig_zoom.add_trace(go.Scatter(
+                x=cz["year"], y=cz["life_expectancy"], mode="lines+markers",
+                name=BZ_NAMES[iso], line=dict(color=BZ_COLORS[iso], width=2.5),
+                marker=dict(size=7),
+            ))
+    global_zoom = zoom.groupby("year")["life_expectancy"].mean().dropna()
+    fig_zoom.add_trace(go.Scatter(
+        x=global_zoom.index, y=global_zoom.values, mode="lines+markers",
+        name="Global Average", line=dict(color="#95a5a6", width=2, dash="dash"),
+        marker=dict(size=5),
+    ))
+    fig_zoom.add_vrect(x0=2020, x1=2021.5, fillcolor="red", opacity=0.08, line_width=0)
+    fig_zoom.update_layout(
+        title="All Blue Zone Countries vs Global Average (2015-2023)",
+        xaxis_title="Year", yaxis_title="Life Expectancy (years)",
+        height=480, template="plotly_white",
+    )
+    st.plotly_chart(fig_zoom, use_container_width=True)
+
+    # Recovery trajectory: change relative to 2019
+    st.markdown('<h3 class="section-hdr">Recovery Trajectory: Change from 2019 Baseline</h3>',
+                unsafe_allow_html=True)
+
+    fig_recov = go.Figure()
+    for iso in sorted(BZ_COLORS):
+        c = hist_full[hist_full["iso_code"] == iso].sort_values("year")
+        le_2019 = c[c["year"] == 2019]["life_expectancy"]
+        if le_2019.empty:
+            continue
+        le_2019_val = le_2019.iloc[0]
+        cdata = c[(c["year"] >= 2019) & (c["year"] <= 2023)][["year", "life_expectancy"]].dropna()
+        if not cdata.empty:
+            relative = cdata["life_expectancy"] - le_2019_val
+            fig_recov.add_trace(go.Scatter(
+                x=cdata["year"], y=relative, mode="lines+markers",
+                name=BZ_NAMES[iso], line=dict(color=BZ_COLORS[iso], width=2.5),
+                marker=dict(size=7),
+            ))
+    # Global average relative
+    g19 = hist_full[hist_full["year"] == 2019]["life_expectancy"].mean()
+    g_yrs, g_vals = [], []
+    for yr in range(2019, 2024):
+        g = hist_full[hist_full["year"] == yr]["life_expectancy"].mean()
+        g_yrs.append(yr)
+        g_vals.append(g - g19)
+    fig_recov.add_trace(go.Scatter(
+        x=g_yrs, y=g_vals, mode="lines+markers", name="Global Average",
+        line=dict(color="#95a5a6", width=2, dash="dash"), marker=dict(size=5),
+    ))
+    fig_recov.add_hline(y=0, line_color="black", line_width=1)
+    fig_recov.update_layout(
+        title="Change from 2019 Level (Below zero = still worse than pre-COVID)",
+        xaxis_title="Year", yaxis_title="Change from 2019 (years)",
+        height=450, template="plotly_white",
+    )
+    st.plotly_chart(fig_recov, use_container_width=True)
+
+    # Trend vs reality overlay
+    st.markdown('<h3 class="section-hdr">Trend vs Reality: What 2020-2023 Should Have Been</h3>',
+                unsafe_allow_html=True)
+
+    col_t1, col_t2 = st.columns(2)
+    for col, (lbl, is_bz) in zip([col_t1, col_t2],
+                                  [("Global Average", False), ("Blue Zone Average", True)]):
+        if is_bz:
+            sub = hist_full[hist_full["is_blue_zone"] == 1]
+        else:
+            sub = hist_full
+        yearly = sub.groupby("year")["life_expectancy"].mean().dropna()
+        trend_data = yearly[(yearly.index >= 2000) & (yearly.index <= 2019)]
+        if len(trend_data) < 5:
+            continue
+        x_arr = np.array(trend_data.index, dtype=float)
+        y_arr = np.array(trend_data.values, dtype=float)
+        slope = np.polyfit(x_arr, y_arr, 1)
+        trend_fn = np.poly1d(slope)
+        extrap_x = list(range(2000, 2024))
+        extrap_y = [trend_fn(yr) for yr in extrap_x]
+        actual_x = [yr for yr in range(2000, 2024) if yr in yearly.index]
+        actual_y = [yearly[yr] for yr in actual_x]
+
+        fig_t = go.Figure()
+        fig_t.add_trace(go.Scatter(
+            x=actual_x, y=actual_y, mode="lines+markers", name="Actual",
+            line=dict(color="#2c3e50", width=2.5), marker=dict(size=5),
+        ))
+        fig_t.add_trace(go.Scatter(
+            x=extrap_x, y=extrap_y, mode="lines", name="Pre-COVID Trend",
+            line=dict(color="#27ae60", width=2, dash="dash"),
+        ))
+        fig_t.add_vrect(x0=2020, x1=2023, fillcolor="red", opacity=0.06, line_width=0)
+        fig_t.update_layout(
+            title=f"{lbl}: Trend vs Reality",
+            xaxis_title="Year", yaxis_title="Life Expectancy (years)",
+            height=380, template="plotly_white",
+        )
+        with col:
+            st.plotly_chart(fig_t, use_container_width=True)
+
     # Key takeaway
     st.markdown('<h3 class="section-hdr">What This Means for the Analysis</h3>',
                 unsafe_allow_html=True)
