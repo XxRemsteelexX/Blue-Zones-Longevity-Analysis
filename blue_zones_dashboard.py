@@ -2,10 +2,11 @@
 """
 Blue Zones Longevity Analysis Dashboard
 
-Three-view interactive dashboard:
+Four-view interactive dashboard:
   1. Pre-COVID (1960-2019) -- clean secular trends
   2. Full Period (1960-2023) -- includes COVID disruption and recovery
   3. COVID Impact Comparison -- side-by-side analysis
+  4. Statistical Deep Dive -- significance tests, controls, sensitivity
 
 Built on real World Bank, WHO, and projected data.
 """
@@ -91,7 +92,8 @@ def load_comparison_summary():
 # ---------------------------------------------------------------------------
 # Chart builders
 # ---------------------------------------------------------------------------
-def fig_timelines(hist, proj, selected_isos, title_suffix="", show_proj=True):
+def fig_timelines(hist, proj, selected_isos, title_suffix="", show_proj=True,
+                  show_gender=False):
     fig = go.Figure()
     global_avg = hist.groupby("year")["life_expectancy"].mean().dropna()
     fig.add_trace(go.Scatter(
@@ -109,6 +111,23 @@ def fig_timelines(hist, proj, selected_isos, title_suffix="", show_proj=True):
                 x=le["year"], y=le["life_expectancy"],
                 mode="lines", name=label, line=dict(color=color, width=2.5),
             ))
+        if show_gender:
+            le_m = ch[["year", "life_expectancy_male"]].dropna()
+            le_f = ch[["year", "life_expectancy_female"]].dropna()
+            if not le_m.empty:
+                fig.add_trace(go.Scatter(
+                    x=le_m["year"], y=le_m["life_expectancy_male"],
+                    mode="lines", name=f"{iso} Male",
+                    line=dict(color=color, width=1.2, dash="dash"),
+                    showlegend=False,
+                ))
+            if not le_f.empty:
+                fig.add_trace(go.Scatter(
+                    x=le_f["year"], y=le_f["life_expectancy_female"],
+                    mode="lines", name=f"{iso} Female",
+                    line=dict(color=color, width=1.2, dash="dot"),
+                    showlegend=False,
+                ))
         if show_proj and not proj.empty:
             cp = proj[proj["iso_code"] == iso].sort_values("year")
             if not cp.empty and "le_medium" in cp.columns:
@@ -126,8 +145,9 @@ def fig_timelines(hist, proj, selected_isos, title_suffix="", show_proj=True):
                     ))
     if show_proj:
         fig.add_vline(x=2023, line_dash="dot", line_color="grey", opacity=0.5)
+    gender_note = " (dashed=male, dotted=female)" if show_gender else ""
     fig.update_layout(
-        title=f"Life Expectancy Over Time{title_suffix}",
+        title=f"Life Expectancy Over Time{title_suffix}{gender_note}",
         xaxis_title="Year", yaxis_title="Life Expectancy (years)",
         height=500, template="plotly_white",
         legend=dict(orientation="h", yanchor="bottom", y=-0.28),
@@ -135,7 +155,8 @@ def fig_timelines(hist, proj, selected_isos, title_suffix="", show_proj=True):
     return fig
 
 
-def fig_convergence(bz_global, sigma, title_prefix=""):
+def fig_convergence(bz_global, sigma, title_prefix="", gap_ci=None,
+                    weighted_gap=None, show_weighted=False):
     fig = make_subplots(rows=2, cols=1, shared_xaxes=True,
                         subplot_titles=[f"{title_prefix}Blue Zone Gap Over Global Average",
                                         f"{title_prefix}Sigma Convergence (Global LE Spread)"],
@@ -143,9 +164,27 @@ def fig_convergence(bz_global, sigma, title_prefix=""):
     if not bz_global.empty:
         fig.add_trace(go.Scatter(
             x=bz_global["year"], y=bz_global["bz_gap_over_global"],
-            fill="tozeroy", mode="lines", name="BZ advantage",
+            fill="tozeroy", mode="lines", name="BZ advantage (unweighted)",
             line=dict(color="#2ecc71", width=2), fillcolor="rgba(46,204,113,0.2)",
         ), row=1, col=1)
+
+        # Add CI ribbon if available
+        if gap_ci is not None and not gap_ci.empty:
+            fig.add_trace(go.Scatter(
+                x=pd.concat([gap_ci["year"], gap_ci["year"][::-1]]),
+                y=pd.concat([gap_ci["ci_upper"], gap_ci["ci_lower"][::-1]]),
+                fill="toself", fillcolor="rgba(46,204,113,0.1)",
+                line=dict(width=0), showlegend=True, name="95% CI",
+            ), row=1, col=1)
+
+        # Add weighted gap if toggled
+        if show_weighted and weighted_gap is not None and not weighted_gap.empty:
+            fig.add_trace(go.Scatter(
+                x=weighted_gap["year"], y=weighted_gap["gap_weighted"],
+                mode="lines", name="BZ gap (pop-weighted)",
+                line=dict(color="#e74c3c", width=2, dash="dash"),
+            ), row=1, col=1)
+
     if not sigma.empty:
         fig.add_trace(go.Scatter(
             x=sigma["year"], y=sigma["le_std"], mode="lines",
@@ -268,6 +307,14 @@ def render_period_tab(hist, proj, bz_global, sigma, beta, decades, period_label,
     bz_isos = sorted(BZ_COLORS.keys())
     yr_min, yr_max = int(hist["year"].min()), int(hist["year"].max())
 
+    # Load additional data for enhancements
+    gap_ci = load_analysis_file("", "gap_confidence_intervals")
+    weighted_gap = load_analysis_file("", "population_weighted_gap")
+    if not gap_ci.empty and yr_max <= 2019:
+        gap_ci = gap_ci[gap_ci["year"] <= 2019]
+    if not weighted_gap.empty and yr_max <= 2019:
+        weighted_gap = weighted_gap[weighted_gap["year"] <= 2019]
+
     # KPIs
     c1, c2, c3, c4 = st.columns(4)
     c1.metric("Countries", hist["iso_code"].nunique())
@@ -277,16 +324,28 @@ def render_period_tab(hist, proj, bz_global, sigma, beta, decades, period_label,
         final_gap = bz_global.iloc[-1]["bz_gap_over_global"]
         c4.metric("BZ Gap (final year)", f"+{final_gap:.1f} yr")
 
+    # Options row
+    opt_col1, opt_col2 = st.columns(2)
+    with opt_col1:
+        show_gender = st.checkbox("Show male/female LE overlay", value=False,
+                                  key=f"gender_{period_label}")
+    with opt_col2:
+        show_weighted = st.checkbox("Show population-weighted gap", value=False,
+                                    key=f"weighted_{period_label}")
+
     # Historical trends
     st.markdown(f'<h3 class="section-hdr">Life Expectancy: Blue Zone Countries vs World ({period_label})</h3>',
                 unsafe_allow_html=True)
-    st.plotly_chart(fig_timelines(hist, proj, bz_isos, f" ({period_label})", show_proj=show_proj),
+    st.plotly_chart(fig_timelines(hist, proj, bz_isos, f" ({period_label})",
+                                  show_proj=show_proj, show_gender=show_gender),
                     use_container_width=True)
 
     # Convergence
     col1, col2 = st.columns(2)
     with col1:
-        st.plotly_chart(fig_convergence(bz_global, sigma, f"{period_label}: "),
+        st.plotly_chart(fig_convergence(bz_global, sigma, f"{period_label}: ",
+                                         gap_ci=gap_ci, weighted_gap=weighted_gap,
+                                         show_weighted=show_weighted),
                         use_container_width=True)
     with col2:
         st.plotly_chart(fig_decade_bars(decades, f" ({period_label})"),
@@ -341,6 +400,31 @@ def render_comparison_tab(hist_full, impact_df, summary_df,
     c4.metric("Worst Hit Country", f"{s['worst_hit_country']} ({s['worst_hit_drop']:.1f} yr)")
 
     st.markdown("---")
+
+    # Structural break test results
+    ts_tests = load_analysis_file("", "time_series_tests")
+    covid_accel = load_analysis_file("", "covid_acceleration_test")
+
+    if not ts_tests.empty:
+        st.markdown('<h3 class="section-hdr">Structural Break Analysis</h3>',
+                    unsafe_allow_html=True)
+        chow = ts_tests[ts_tests["test"] == "Chow_structural_break_2020"]
+        if not chow.empty:
+            chow_row = chow.iloc[0]
+            col_s1, col_s2, col_s3 = st.columns(3)
+            col_s1.metric("Chow Test F-statistic", f"{chow_row['statistic']:.2f}")
+            col_s2.metric("P-value", f"{chow_row['p_value']:.6f}")
+            col_s3.metric("Result", chow_row["conclusion"])
+
+        if not covid_accel.empty:
+            st.markdown("**COVID Acceleration Test:** Did COVID push the gap below the pre-COVID trend?")
+            accel_display = covid_accel[["year", "predicted_gap", "actual_gap",
+                                         "difference", "outside_pi"]].copy()
+            accel_display.columns = ["Year", "Predicted Gap", "Actual Gap",
+                                     "Difference", "Outside 95% PI"]
+            st.dataframe(accel_display.round(3), use_container_width=True, hide_index=True)
+
+        st.markdown("---")
 
     # BZ vs Non-BZ COVID impact
     st.markdown('<h3 class="section-hdr">Blue Zone Countries: COVID Impact</h3>',
@@ -597,6 +681,504 @@ def render_comparison_tab(hist_full, impact_df, summary_df,
     )
 
 
+def render_stats_tab():
+    """Render the Statistical Deep Dive tab with significance tests, controls,
+    and sensitivity analysis."""
+
+    st.markdown('<h3 class="section-hdr">Statistical Significance and Controls</h3>',
+                unsafe_allow_html=True)
+    st.markdown(
+        "This section presents formal statistical tests that go beyond descriptive "
+        "analysis. Every claim about Blue Zone advantage, convergence, and COVID impact "
+        "is backed by confidence intervals, p-values, and effect sizes."
+    )
+
+    # -----------------------------------------------------------------------
+    # 1. Gap Confidence Intervals
+    # -----------------------------------------------------------------------
+    gap_ci = load_analysis_file("", "gap_confidence_intervals")
+    if not gap_ci.empty:
+        st.markdown('<h3 class="section-hdr">1. Blue Zone Gap with 95% Confidence Intervals</h3>',
+                    unsafe_allow_html=True)
+        st.markdown(
+            "Bootstrap confidence intervals (1,000 resamples) test whether a random "
+            "set of 5 countries could produce a gap this large by chance. The gap is "
+            "significant at p<0.05 for every year."
+        )
+
+        fig_ci = go.Figure()
+        fig_ci.add_trace(go.Scatter(
+            x=gap_ci["year"], y=gap_ci["gap"],
+            mode="lines", name="BZ Gap",
+            line=dict(color="#2ecc71", width=2.5),
+        ))
+        fig_ci.add_trace(go.Scatter(
+            x=pd.concat([gap_ci["year"], gap_ci["year"][::-1]]),
+            y=pd.concat([gap_ci["ci_upper"], gap_ci["ci_lower"][::-1]]),
+            fill="toself", fillcolor="rgba(46,204,113,0.15)",
+            line=dict(width=0), name="95% CI",
+        ))
+        fig_ci.add_hline(y=0, line_color="black", line_width=0.5)
+        fig_ci.update_layout(
+            title="Blue Zone Gap Over Global Average with 95% Bootstrap CI",
+            xaxis_title="Year", yaxis_title="Gap (years)",
+            height=420, template="plotly_white",
+        )
+        st.plotly_chart(fig_ci, use_container_width=True)
+
+        # Key stats
+        latest = gap_ci.iloc[-1]
+        earliest = gap_ci.iloc[0]
+        col_a, col_b, col_c = st.columns(3)
+        col_a.metric("Gap (1960)", f"{earliest['gap']:.1f} yr",
+                     help=f"95% CI: [{earliest['ci_lower']:.1f}, {earliest['ci_upper']:.1f}]")
+        col_b.metric("Gap (latest)", f"{latest['gap']:.1f} yr",
+                     help=f"95% CI: [{latest['ci_lower']:.1f}, {latest['ci_upper']:.1f}]")
+        n_sig = gap_ci["significant_at_05"].sum()
+        col_c.metric("Years Significant", f"{n_sig} / {len(gap_ci)}")
+
+    # -----------------------------------------------------------------------
+    # 2. Beta Convergence P-values
+    # -----------------------------------------------------------------------
+    beta_pv = load_analysis_file("", "beta_convergence_pvalues")
+    if not beta_pv.empty:
+        st.markdown('<h3 class="section-hdr">2. Beta Convergence with P-values</h3>',
+                    unsafe_allow_html=True)
+        st.markdown(
+            "Each decade's beta correlation (do low-LE countries catch up faster?) "
+            "is tested for significance. Bonferroni correction adjusts for 6 simultaneous tests."
+        )
+
+        fig_beta = make_subplots(specs=[[{"secondary_y": True}]])
+        fig_beta.add_trace(go.Bar(
+            x=beta_pv["decade"], y=beta_pv["beta_r"],
+            name="Beta r", marker_color=["#2ecc71" if s else "#e74c3c"
+                                          for s in beta_pv["significant_at_05"]],
+            text=[f"{r:.3f}" for r in beta_pv["beta_r"]],
+            textposition="outside",
+        ), secondary_y=False)
+        fig_beta.add_trace(go.Scatter(
+            x=beta_pv["decade"], y=beta_pv["p_value_bonferroni"],
+            mode="lines+markers", name="Bonferroni p-value",
+            line=dict(color="#8e44ad", width=2), marker=dict(size=8),
+        ), secondary_y=True)
+        fig_beta.add_hline(y=0.05, line_dash="dash", line_color="red",
+                           opacity=0.5, secondary_y=True,
+                           annotation_text="p=0.05")
+        fig_beta.update_layout(
+            title="Beta Convergence by Decade (green = significant after Bonferroni)",
+            height=420, template="plotly_white",
+        )
+        fig_beta.update_yaxes(title_text="Beta Correlation (r)", secondary_y=False)
+        fig_beta.update_yaxes(title_text="P-value (Bonferroni)", secondary_y=True, type="log")
+        st.plotly_chart(fig_beta, use_container_width=True)
+
+        n_sig = beta_pv["significant_at_05"].sum()
+        st.markdown(f"**{n_sig} of {len(beta_pv)} decades** show statistically significant "
+                    f"beta convergence after Bonferroni correction.")
+
+    # -----------------------------------------------------------------------
+    # 3. Partial Correlations (raw vs GDP-controlled)
+    # -----------------------------------------------------------------------
+    partial = load_analysis_file("", "partial_correlations")
+    if not partial.empty:
+        st.markdown('<h3 class="section-hdr">3. Partial Correlations: Raw vs GDP-Controlled</h3>',
+                    unsafe_allow_html=True)
+        st.markdown(
+            "Many indicators correlate with life expectancy simply because both track "
+            "wealth. Partial correlations remove the GDP effect to reveal which factors "
+            "have independent predictive value."
+        )
+
+        fig_partial = go.Figure()
+        indicators = partial["indicator"].tolist()
+        fig_partial.add_trace(go.Bar(
+            x=indicators, y=partial["raw_correlation"],
+            name="Raw correlation", marker_color="#3498DB",
+            text=[f"{v:.2f}" for v in partial["raw_correlation"]],
+            textposition="outside",
+        ))
+        fig_partial.add_trace(go.Bar(
+            x=indicators, y=partial["partial_correlation_gdp_controlled"],
+            name="GDP-controlled", marker_color="#E74C3C",
+            text=[f"{v:.2f}" for v in partial["partial_correlation_gdp_controlled"]],
+            textposition="outside",
+        ))
+        fig_partial.update_layout(
+            title="Correlation with Life Expectancy: Raw vs GDP-Controlled",
+            xaxis_title="Indicator", yaxis_title="Correlation (r)",
+            barmode="group", height=450, template="plotly_white",
+            xaxis=dict(tickangle=30),
+        )
+        st.plotly_chart(fig_partial, use_container_width=True)
+
+        # Highlight key findings
+        gdp_explained = partial[partial["gdp_explains_relationship"] == True]
+        if len(gdp_explained) > 0:
+            names = ", ".join(gdp_explained["indicator"].tolist())
+            st.markdown(f"**GDP explains the relationship for:** {names} "
+                        f"(correlation drops substantially after controlling for GDP)")
+
+        # Data table
+        display_partial = partial[["indicator", "n_countries", "raw_correlation",
+                                    "partial_correlation_gdp_controlled",
+                                    "gdp_explains_relationship"]].copy()
+        display_partial.columns = ["Indicator", "N", "Raw r", "GDP-Controlled r",
+                                   "GDP Explains?"]
+        st.dataframe(display_partial.round(3), use_container_width=True, hide_index=True)
+
+    # -----------------------------------------------------------------------
+    # 4. Multiple Regression
+    # -----------------------------------------------------------------------
+    reg = load_analysis_file("", "regression_results")
+    reg_meta = load_analysis_file("", "regression_meta")
+    reg_vif = load_analysis_file("", "regression_vif")
+    if not reg.empty:
+        st.markdown('<h3 class="section-hdr">4. Multiple Regression: Predictors of Life Expectancy</h3>',
+                    unsafe_allow_html=True)
+
+        if not reg_meta.empty:
+            rm = reg_meta.iloc[0]
+            c1, c2, c3, c4 = st.columns(4)
+            c1.metric("R-squared", f"{rm['r_squared']:.3f}")
+            c2.metric("Adj R-squared", f"{rm['adj_r_squared']:.3f}")
+            c3.metric("F-statistic", f"{rm['f_statistic']:.1f}")
+            c4.metric("N observations", f"{int(rm['n_observations'])}")
+
+        # Coefficient chart (exclude intercept)
+        reg_coef = reg[reg["predictor"] != "(intercept)"].copy()
+        colors = ["#2ecc71" if s else "#95a5a6" for s in reg_coef["significant_at_05"]]
+        fig_reg = go.Figure(go.Bar(
+            x=reg_coef["predictor"], y=reg_coef["t_statistic"],
+            marker_color=colors,
+            text=[f"p={p:.4f}" for p in reg_coef["p_value"]],
+            textposition="outside",
+        ))
+        fig_reg.add_hline(y=1.96, line_dash="dash", line_color="red", opacity=0.4,
+                          annotation_text="t=1.96 (p=0.05)")
+        fig_reg.add_hline(y=-1.96, line_dash="dash", line_color="red", opacity=0.4)
+        fig_reg.update_layout(
+            title="Regression: T-statistics (green = significant at p<0.05)",
+            xaxis_title="Predictor", yaxis_title="T-statistic",
+            height=400, template="plotly_white",
+        )
+        st.plotly_chart(fig_reg, use_container_width=True)
+
+        # Coefficient table
+        st.markdown("**Regression Coefficients**")
+        display_reg = reg.copy()
+        display_reg.columns = ["Predictor", "Coefficient", "Std Error", "P-value",
+                               "T-stat", "Significant"]
+        st.dataframe(display_reg.round(4), use_container_width=True, hide_index=True)
+
+        # VIF
+        if not reg_vif.empty:
+            st.markdown("**Variance Inflation Factors (VIF > 10 indicates severe multicollinearity)**")
+            st.dataframe(reg_vif.round(2), use_container_width=True, hide_index=True)
+
+    # -----------------------------------------------------------------------
+    # 5. Sensitivity Analysis (Drop-One-Country)
+    # -----------------------------------------------------------------------
+    sensitivity = load_analysis_file("", "sensitivity_drop_one")
+    if not sensitivity.empty:
+        st.markdown('<h3 class="section-hdr">5. Sensitivity Analysis: Drop-One-Country</h3>',
+                    unsafe_allow_html=True)
+        st.markdown(
+            "How much does each Blue Zone country affect the overall result? "
+            "Removing each country one at a time reveals which countries drive "
+            "the Blue Zone advantage."
+        )
+
+        fig_sens = go.Figure()
+        fig_sens.add_trace(go.Bar(
+            x=sensitivity["dropped_country"],
+            y=sensitivity["gap_change"],
+            marker_color=["#e74c3c" if v > 0 else "#2ecc71"
+                          for v in sensitivity["gap_change"]],
+            text=[f"{v:+.2f} yr" for v in sensitivity["gap_change"]],
+            textposition="outside",
+        ))
+        fig_sens.add_hline(y=0, line_color="black", line_width=0.5)
+        fig_sens.update_layout(
+            title="Effect of Removing Each BZ Country on 2019 Gap",
+            xaxis_title="Country Removed", yaxis_title="Change in Gap (years)",
+            height=400, template="plotly_white",
+        )
+        st.plotly_chart(fig_sens, use_container_width=True)
+
+        # Table
+        display_sens = sensitivity[["dropped_country", "dropped_le_2019",
+                                     "remaining_bz_mean", "gap_2019",
+                                     "gap_change"]].copy()
+        display_sens.columns = ["Dropped", "That Country LE", "Remaining BZ Mean",
+                                "New Gap", "Gap Change"]
+        st.dataframe(display_sens.round(2), use_container_width=True, hide_index=True)
+
+        # Find biggest outlier
+        biggest = sensitivity.loc[sensitivity["gap_change"].abs().idxmax()]
+        direction = "increases" if biggest["gap_change"] > 0 else "decreases"
+        st.markdown(
+            f"**Key finding:** Removing {biggest['dropped_country']} {direction} the "
+            f"gap by {abs(biggest['gap_change']):.2f} years -- the largest single-country effect."
+        )
+
+    # -----------------------------------------------------------------------
+    # 6. Gender Analysis
+    # -----------------------------------------------------------------------
+    gender = load_analysis_file("", "gender_gap_analysis")
+    if not gender.empty:
+        st.markdown('<h3 class="section-hdr">6. Gender Analysis: Male vs Female LE Gap</h3>',
+                    unsafe_allow_html=True)
+
+        col_g1, col_g2 = st.columns(2)
+
+        with col_g1:
+            # Male and female BZ gap over time
+            fig_gender = go.Figure()
+            fig_gender.add_trace(go.Scatter(
+                x=gender["year"], y=gender["male_gap"],
+                mode="lines", name="Male BZ gap",
+                line=dict(color="#3498DB", width=2),
+            ))
+            fig_gender.add_trace(go.Scatter(
+                x=gender["year"], y=gender["female_gap"],
+                mode="lines", name="Female BZ gap",
+                line=dict(color="#E74C3C", width=2),
+            ))
+            fig_gender.update_layout(
+                title="BZ Advantage by Gender Over Time",
+                xaxis_title="Year", yaxis_title="Gap (years)",
+                height=380, template="plotly_white",
+            )
+            st.plotly_chart(fig_gender, use_container_width=True)
+
+        with col_g2:
+            # Gender gap within BZ vs global
+            fig_gg = go.Figure()
+            fig_gg.add_trace(go.Scatter(
+                x=gender["year"], y=gender["bz_gender_gap"],
+                mode="lines", name="BZ gender gap (F-M)",
+                line=dict(color="#9B59B6", width=2),
+            ))
+            fig_gg.add_trace(go.Scatter(
+                x=gender["year"], y=gender["global_gender_gap"],
+                mode="lines", name="Global gender gap (F-M)",
+                line=dict(color="#95a5a6", width=2, dash="dash"),
+            ))
+            fig_gg.update_layout(
+                title="Gender Gap (Female-Male LE) Over Time",
+                xaxis_title="Year", yaxis_title="Female - Male LE (years)",
+                height=380, template="plotly_white",
+            )
+            st.plotly_chart(fig_gg, use_container_width=True)
+
+        # Key stats
+        latest_g = gender.dropna(subset=["male_gap", "female_gap"]).iloc[-1]
+        c1, c2, c3 = st.columns(3)
+        c1.metric("Male BZ Gap (latest)", f"+{latest_g['male_gap']:.1f} yr")
+        c2.metric("Female BZ Gap (latest)", f"+{latest_g['female_gap']:.1f} yr")
+        stronger = latest_g["bz_advantage_stronger_for"]
+        c3.metric("BZ Advantage Stronger For", stronger.capitalize())
+
+    # -----------------------------------------------------------------------
+    # 7. Population-Weighted vs Unweighted
+    # -----------------------------------------------------------------------
+    weighted = load_analysis_file("", "population_weighted_gap")
+    if not weighted.empty:
+        st.markdown('<h3 class="section-hdr">7. Population-Weighted vs Unweighted Gap</h3>',
+                    unsafe_allow_html=True)
+        st.markdown(
+            "The unweighted average treats each country equally. Population weighting "
+            "gives more influence to populous countries like China and India, which "
+            "substantially changes the global average."
+        )
+
+        fig_wt = go.Figure()
+        fig_wt.add_trace(go.Scatter(
+            x=weighted["year"], y=weighted["gap_unweighted"],
+            mode="lines", name="Unweighted gap",
+            line=dict(color="#2ecc71", width=2.5),
+        ))
+        fig_wt.add_trace(go.Scatter(
+            x=weighted["year"], y=weighted["gap_weighted"],
+            mode="lines", name="Population-weighted gap",
+            line=dict(color="#e74c3c", width=2.5),
+        ))
+        fig_wt.update_layout(
+            title="BZ Gap: Unweighted vs Population-Weighted",
+            xaxis_title="Year", yaxis_title="Gap (years)",
+            height=400, template="plotly_white",
+        )
+        st.plotly_chart(fig_wt, use_container_width=True)
+
+        latest_w = weighted.iloc[-1]
+        c1, c2, c3 = st.columns(3)
+        c1.metric("Unweighted Gap", f"+{latest_w['gap_unweighted']:.1f} yr")
+        c2.metric("Weighted Gap", f"+{latest_w['gap_weighted']:.1f} yr")
+        c3.metric("Difference", f"{latest_w['gap_difference']:.1f} yr")
+
+    # -----------------------------------------------------------------------
+    # 8. Regional Peer Comparison
+    # -----------------------------------------------------------------------
+    regional = load_analysis_file("", "regional_peer_comparison")
+    outlier_tests = load_analysis_file("", "regional_outlier_tests")
+    if not regional.empty:
+        st.markdown('<h3 class="section-hdr">8. Regional Peer Comparison</h3>',
+                    unsafe_allow_html=True)
+        st.markdown(
+            "Each Blue Zone country is compared to its regional peers. "
+            "Are these countries exceptional within their regions, or do they "
+            "belong to already-strong regions?"
+        )
+
+        # Selector for which BZ country to show
+        bz_countries_in_regional = regional["bz_country"].unique().tolist()
+        selected_bz = st.selectbox("Select Blue Zone country",
+                                   bz_countries_in_regional,
+                                   key="regional_select")
+
+        rc = regional[regional["bz_country"] == selected_bz].sort_values("year")
+        if not rc.empty:
+            fig_reg_peer = go.Figure()
+            fig_reg_peer.add_trace(go.Scatter(
+                x=rc["year"], y=rc["bz_le"],
+                mode="lines", name=selected_bz,
+                line=dict(color="#3498DB", width=2.5),
+            ))
+            fig_reg_peer.add_trace(go.Scatter(
+                x=rc["year"], y=rc["regional_mean"],
+                mode="lines", name=f"Regional avg ({rc['region'].iloc[0]})",
+                line=dict(color="#95a5a6", width=2, dash="dash"),
+            ))
+            # Fill area between
+            fig_reg_peer.add_trace(go.Scatter(
+                x=pd.concat([rc["year"], rc["year"][::-1]]),
+                y=pd.concat([rc["bz_le"], rc["regional_mean"][::-1]]),
+                fill="toself", fillcolor="rgba(52,152,219,0.1)",
+                line=dict(width=0), showlegend=False, name="",
+            ))
+            fig_reg_peer.update_layout(
+                title=f"{selected_bz} vs {rc['region'].iloc[0]} Peers",
+                xaxis_title="Year", yaxis_title="Life Expectancy (years)",
+                height=420, template="plotly_white",
+            )
+            st.plotly_chart(fig_reg_peer, use_container_width=True)
+
+        # Outlier test results
+        if not outlier_tests.empty:
+            st.markdown("**Regional Outlier Tests (2000-2019 mean advantage, t-test)**")
+            display_out = outlier_tests[["bz_country", "region",
+                                          "mean_advantage_2000_2019",
+                                          "t_statistic", "p_value",
+                                          "is_regional_outlier"]].copy()
+            display_out.columns = ["Country", "Region", "Mean Advantage",
+                                   "T-stat", "P-value", "Outlier?"]
+            st.dataframe(display_out.round(3), use_container_width=True, hide_index=True)
+
+    # -----------------------------------------------------------------------
+    # 9. Income Group Convergence
+    # -----------------------------------------------------------------------
+    income = load_analysis_file("", "income_group_convergence")
+    if not income.empty:
+        st.markdown('<h3 class="section-hdr">9. Income Group Convergence</h3>',
+                    unsafe_allow_html=True)
+        st.markdown(
+            "Are low-income countries catching up to high-income countries? "
+            "This breaks down convergence by World Bank income groups."
+        )
+
+        fig_inc = go.Figure()
+        inc_colors = {"Low income": "#E74C3C", "Lower-middle income": "#F39C12",
+                      "Upper-middle income": "#3498DB", "High income": "#2ECC71"}
+        for _, row in income.iterrows():
+            group = row["income_group"]
+            fig_inc.add_trace(go.Bar(
+                x=[group], y=[row["le_improvement"]],
+                name=group, marker_color=inc_colors.get(group, "#666"),
+                text=f"+{row['le_improvement']:.1f} yr",
+                textposition="outside",
+                showlegend=False,
+            ))
+        fig_inc.update_layout(
+            title="Life Expectancy Improvement by Income Group (1960s to Recent)",
+            xaxis_title="Income Group", yaxis_title="LE Improvement (years)",
+            height=400, template="plotly_white",
+        )
+        st.plotly_chart(fig_inc, use_container_width=True)
+
+        # Table
+        display_inc = income[["income_group", "n_countries", "le_1960s",
+                               "le_recent", "le_improvement",
+                               "sigma_converging"]].copy()
+        display_inc.columns = ["Group", "N Countries", "LE 1960s", "LE Recent",
+                               "Improvement", "Within-Group Convergence"]
+        st.dataframe(display_inc.round(1), use_container_width=True, hide_index=True)
+
+    # -----------------------------------------------------------------------
+    # 10. Decade Improvement Tests
+    # -----------------------------------------------------------------------
+    decade_tests = load_analysis_file("", "decade_improvement_tests")
+    if not decade_tests.empty:
+        st.markdown('<h3 class="section-hdr">10. BZ vs Non-BZ Decade Gains: Statistical Tests</h3>',
+                    unsafe_allow_html=True)
+
+        fig_dt = make_subplots(specs=[[{"secondary_y": True}]])
+        fig_dt.add_trace(go.Bar(
+            x=decade_tests["decade"], y=decade_tests["bz_mean_gain"],
+            name="BZ Mean Gain", marker_color="#3498DB",
+        ), secondary_y=False)
+        fig_dt.add_trace(go.Bar(
+            x=decade_tests["decade"], y=decade_tests["non_bz_mean_gain"],
+            name="Non-BZ Mean Gain", marker_color="#bdc3c7",
+        ), secondary_y=False)
+        fig_dt.add_trace(go.Scatter(
+            x=decade_tests["decade"], y=decade_tests["cohens_d"].abs(),
+            mode="lines+markers", name="|Cohen's d|",
+            line=dict(color="#E74C3C", width=2), marker=dict(size=8),
+        ), secondary_y=True)
+        fig_dt.add_hline(y=0.5, line_dash="dash", line_color="red",
+                         opacity=0.3, secondary_y=True,
+                         annotation_text="d=0.5 (medium)")
+        fig_dt.update_layout(
+            title="BZ vs Non-BZ Gains by Decade with Effect Sizes",
+            barmode="group", height=420, template="plotly_white",
+        )
+        fig_dt.update_yaxes(title_text="LE Gain (years)", secondary_y=False)
+        fig_dt.update_yaxes(title_text="|Cohen's d|", secondary_y=True)
+        st.plotly_chart(fig_dt, use_container_width=True)
+
+        display_dt = decade_tests[["decade", "bz_mean_gain", "non_bz_mean_gain",
+                                    "t_statistic", "p_value", "cohens_d",
+                                    "effect_size"]].copy()
+        display_dt.columns = ["Decade", "BZ Gain", "Non-BZ Gain", "T-stat",
+                              "P-value", "Cohen's d", "Effect Size"]
+        st.dataframe(display_dt.round(4), use_container_width=True, hide_index=True)
+
+    # -----------------------------------------------------------------------
+    # 11. Time-Series Tests
+    # -----------------------------------------------------------------------
+    ts_tests = load_analysis_file("", "time_series_tests")
+    sigma_test = load_analysis_file("", "sigma_convergence_test")
+    if not ts_tests.empty or not sigma_test.empty:
+        st.markdown('<h3 class="section-hdr">11. Time-Series and Stationarity Tests</h3>',
+                    unsafe_allow_html=True)
+
+        if not ts_tests.empty:
+            display_ts = ts_tests[["test", "description", "statistic",
+                                    "p_value", "conclusion"]].copy()
+            display_ts.columns = ["Test", "Description", "Statistic",
+                                  "P-value", "Conclusion"]
+            st.dataframe(display_ts.round(4), use_container_width=True, hide_index=True)
+
+        if not sigma_test.empty:
+            st.markdown("**Sigma Convergence OLS Trend Test**")
+            display_sig = sigma_test[["period", "slope", "slope_p_value",
+                                       "r_squared", "sigma_declining"]].copy()
+            display_sig.columns = ["Period", "Slope (yr/yr)", "P-value",
+                                   "R-squared", "SD Declining"]
+            st.dataframe(display_sig.round(4), use_container_width=True, hide_index=True)
+
+
 # ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
@@ -647,18 +1229,30 @@ def main():
         "World Bank API (1960-2023)\n\n"
         "WHO Global Health Observatory\n\n"
         "93 countries, 5,952 observations\n\n"
+        "16 World Bank indicators\n\n"
         "All real data -- no synthetic"
     )
     st.sidebar.markdown("---")
     st.sidebar.markdown("**Blue Zone Countries**")
     for iso, name in sorted(BZ_NAMES.items()):
         st.sidebar.markdown(f"- {name}")
+    st.sidebar.markdown("---")
+    st.sidebar.markdown("**Statistical Methods**")
+    st.sidebar.markdown(
+        "Bootstrap CIs (1,000 resamples)\n\n"
+        "Bonferroni correction\n\n"
+        "Partial correlations\n\n"
+        "OLS regression with VIF\n\n"
+        "Chow structural break test\n\n"
+        "ADF stationarity tests"
+    )
 
     # --- Main tabs ---
-    tab_pre, tab_full, tab_compare = st.tabs([
+    tab_pre, tab_full, tab_compare, tab_stats = st.tabs([
         "Pre-COVID (1960-2019)",
         "Full Period (1960-2023)",
         "COVID Impact Comparison",
+        "Statistical Deep Dive",
     ])
 
     with tab_pre:
@@ -673,12 +1267,15 @@ def main():
         render_comparison_tab(hist_full, impact_df, summary_df,
                               gap_pre, gap_full, sigma_pre, sigma_full)
 
+    with tab_stats:
+        render_stats_tab()
+
     # Footer
     st.markdown("---")
     st.markdown(
         "<div style='text-align:center;color:#888;font-size:0.85rem'>"
         "Blue Zones Longevity Analysis | Real-world data from World Bank and WHO APIs | "
-        "Pre-COVID and full-period analysis for honest comparison"
+        "Pre-COVID and full-period analysis | Statistical significance tests with CIs and p-values"
         "</div>",
         unsafe_allow_html=True,
     )
