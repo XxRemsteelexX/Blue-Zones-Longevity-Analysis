@@ -1,0 +1,6 @@
+test,description,statistic,p_value,conclusion
+ADF_global_LE,Augmented Dickey-Fuller test on global average LE,-2.8201185691667243,0.05545694329392789,Non-stationary (trending)
+ADF_global_LE_diff,ADF on first differences of global LE,-4.1007906231195035,0.0009656141952616226,Stationary after differencing
+ADF_BZ_gap,ADF test on BZ-global gap series,2.1105959016089075,0.9988005001987882,Non-stationary
+Chow_structural_break_2020,Structural break test at 2020 on BZ gap series,10.824205154583515,9.685131186432105e-05,Structural break detected
+ARIMA_COVID_shock,"ARIMA(1,1,0) residual at 2020 as z-score",0.01275957690664036,0.9898196068241085,Within normal variation

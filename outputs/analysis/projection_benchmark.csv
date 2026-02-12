@@ -1,0 +1,2 @@
+benchmark_status,reason,our_method,note,attempted_sources
+UN WPP 2024 data not accessible,UN Data Portal API requires authentication; CSV download URLs return 404,Trend extrapolation from real World Bank historical data with logistic dampening,"Projections should be interpreted as trend-based estimates, not expert demographic forecasts","UN Data Portal API (401), UN WPP CSV downloads (404)"
