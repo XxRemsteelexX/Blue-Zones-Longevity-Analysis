@@ -1,0 +1,16 @@
+iso_code,country_name,is_blue_zone,actual_le,predicted_le,residual,residual_zscore,classification,residual_rank
+ISR,Israel,0,83.1951219512195,73.39,9.81,2.755,overperformer,1
+JPN,Japan,1,84.0412195121951,78.2,5.84,1.646,overperformer,2
+SAU,Saudi Arabia,0,78.732,72.97,5.76,1.625,overperformer,3
+LUX,Luxembourg,0,83.3585365853659,78.19,5.17,1.459,overperformer,4
+SGP,Singapore,0,82.8951219512195,77.81,5.09,1.437,overperformer,5
+KOR,South Korea,0,83.4292682926829,78.44,4.99,1.411,overperformer,6
+JOR,Jordan,0,77.814,72.98,4.83,1.366,overperformer,7
+CRI,Costa Rica,1,80.799,76.12,4.68,1.323,overperformer,8
+PER,Peru,0,77.74,73.32,4.42,1.25,overperformer,9
+ITA,Italy,1,83.7,79.42,4.28,1.21,overperformer,10
+DZA,Algeria,0,76.261,72.01,4.25,1.204,overperformer,11
+AUS,Australia,0,83.0512195121951,78.86,4.19,1.187,overperformer,12
+FRA,France,0,82.9292682926829,79.39,3.53,1.003,overperformer,13
+SVN,Slovenia,0,81.9780487804878,78.53,3.45,0.98,as_expected,14
+CHE,Switzerland,0,84.0560975609756,80.63,3.42,0.972,as_expected,15

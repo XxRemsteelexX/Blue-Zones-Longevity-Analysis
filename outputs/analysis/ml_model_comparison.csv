@@ -1,0 +1,6 @@
+model,loocv_r2,loocv_rmse,loocv_mae,n_features
+Random Forest,0.6832,3.562,2.714,10
+Ridge,0.6793,3.584,2.716,10
+ElasticNet,0.6783,3.589,2.715,10
+OLS Extended,0.6746,3.61,2.769,10
+Lasso,0.6363,3.817,2.915,6

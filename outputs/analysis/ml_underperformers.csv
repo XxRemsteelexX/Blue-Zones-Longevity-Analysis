@@ -1,0 +1,16 @@
+iso_code,country_name,is_blue_zone,actual_le,predicted_le,residual,residual_zscore,classification,residual_rank
+MOZ,Mozambique,0,63.611,67.28,-3.67,-1.008,underperformer,79
+LTU,Lithuania,0,76.9878048780488,80.69,-3.7,-1.017,underperformer,80
+LBY,Libya,0,69.339,73.25,-3.91,-1.077,underperformer,81
+PHL,Philippines,0,69.833,73.91,-4.07,-1.121,underperformer,82
+KEN,Kenya,0,63.646,67.77,-4.13,-1.137,underperformer,83
+AFG,Afghanistan,0,66.035,70.39,-4.36,-1.202,underperformer,84
+LVA,Latvia,0,75.6780487804878,80.1,-4.42,-1.219,underperformer,85
+MMR,Myanmar,0,66.889,71.35,-4.47,-1.231,underperformer,86
+ZWE,Zimbabwe,0,62.775,67.75,-4.97,-1.372,underperformer,87
+PNG,Papua New Guinea,0,66.134,71.18,-5.04,-1.392,underperformer,88
+MDG,Madagascar,0,63.632,68.78,-5.14,-1.42,underperformer,89
+ZAF,South Africa,0,66.139,73.68,-7.54,-2.089,underperformer,90
+FJI,Fiji,0,67.316,74.92,-7.6,-2.107,underperformer,91
+RUS,Russia,0,73.2546341463415,80.87,-7.61,-2.11,underperformer,92
+NGA,Nigeria,0,54.462,69.16,-14.7,-4.089,underperformer,93

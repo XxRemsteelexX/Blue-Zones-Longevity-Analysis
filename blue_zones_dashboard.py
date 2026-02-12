@@ -2,11 +2,12 @@
 """
 Blue Zones Longevity Analysis Dashboard
 
-Four-view interactive dashboard:
+Five-view interactive dashboard:
   1. Pre-COVID (1960-2019) -- clean secular trends
   2. Full Period (1960-2023) -- includes COVID disruption and recovery
   3. COVID Impact Comparison -- side-by-side analysis
   4. Statistical Deep Dive -- significance tests, controls, sensitivity
+  5. Predictive Analysis -- ML models, overperformance detection, hidden Blue Zones
 
 Built on real World Bank, WHO, and projected data.
 """
@@ -1180,6 +1181,242 @@ def render_stats_tab():
 
 
 # ---------------------------------------------------------------------------
+# Tab 5: Predictive Analysis
+# ---------------------------------------------------------------------------
+def render_prediction_tab():
+    """Tab 5: ML prediction and overperformance analysis."""
+    st.markdown('<h2 class="section-hdr">ML Life Expectancy Prediction and Overperformance Analysis</h2>',
+                unsafe_allow_html=True)
+
+    st.markdown(
+        "Regularized ML models predict life expectancy from 10 country-level features. "
+        "Countries where **actual LE exceeds predicted LE** are \"overperformers\" -- places "
+        "where unmeasured factors may boost longevity. Known Blue Zone countries should "
+        "appear as overperformers if the model captures real patterns."
+    )
+
+    # Load ML outputs
+    model_comp = load_analysis_file("", "ml_model_comparison")
+    feat_imp = load_analysis_file("", "ml_feature_importance")
+    feat_sel = load_analysis_file("", "ml_feature_selection_report")
+    residual_df = load_analysis_file("", "ml_residual_analysis")
+    hidden_bz = load_analysis_file("", "ml_hidden_blue_zones")
+    underperf = load_analysis_file("", "ml_underperformers")
+
+    if model_comp.empty or residual_df.empty:
+        st.warning("ML prediction outputs not found. Run ml_prediction.py first.")
+        return
+
+    # --- Model comparison ---
+    st.markdown('<h3 class="section-hdr">1. Model Comparison (LOOCV, n=93)</h3>',
+                unsafe_allow_html=True)
+
+    c1, c2, c3 = st.columns(3)
+    best = model_comp.iloc[0]
+    c1.metric("Best Model", best['model'])
+    c2.metric("LOOCV R-squared", f"{best['loocv_r2']:.4f}")
+    c3.metric("LOOCV RMSE", f"{best['loocv_rmse']:.2f} years")
+
+    fig_comp = go.Figure()
+    colors = ["#2196F3" if r2 == model_comp['loocv_r2'].max() else "#90CAF9"
+              for r2 in model_comp['loocv_r2']]
+    fig_comp.add_trace(go.Bar(
+        y=model_comp['model'], x=model_comp['loocv_r2'],
+        orientation='h', marker_color=colors,
+        text=[f"R2={v:.3f}" for v in model_comp['loocv_r2']],
+        textposition='outside',
+    ))
+    fig_comp.add_vline(x=0.706, line_dash="dash", line_color="red",
+                       annotation_text="Baseline OLS (R2=0.706)")
+    fig_comp.update_layout(
+        title="LOOCV R-squared by Model",
+        xaxis_title="R-squared", height=300, template="plotly_white",
+        xaxis=dict(range=[0, max(model_comp['loocv_r2'].max() * 1.15, 0.75)]),
+    )
+    st.plotly_chart(fig_comp, use_container_width=True)
+
+    st.markdown("**Model Details**")
+    st.dataframe(model_comp.round(4), use_container_width=True, hide_index=True)
+
+    # --- Feature importance ---
+    if not feat_imp.empty:
+        st.markdown('<h3 class="section-hdr">2. Feature Importance</h3>',
+                    unsafe_allow_html=True)
+
+        col_l, col_r = st.columns(2)
+
+        with col_l:
+            fig_lasso = go.Figure(go.Bar(
+                y=feat_imp.sort_values('lasso_coef')['feature'],
+                x=feat_imp.sort_values('lasso_coef')['lasso_coef'],
+                orientation='h',
+                marker_color=['#E74C3C' if c < 0 else '#2ECC71'
+                              for c in feat_imp.sort_values('lasso_coef')['lasso_coef']],
+            ))
+            fig_lasso.update_layout(
+                title="Lasso Coefficients (0 = eliminated)",
+                xaxis_title="Coefficient", height=400, template="plotly_white",
+            )
+            st.plotly_chart(fig_lasso, use_container_width=True)
+
+        with col_r:
+            fig_rf = go.Figure(go.Bar(
+                y=feat_imp.sort_values('rf_importance')['feature'],
+                x=feat_imp.sort_values('rf_importance')['rf_importance'],
+                orientation='h', marker_color='#3498DB',
+            ))
+            fig_rf.update_layout(
+                title="Random Forest Permutation Importance",
+                xaxis_title="Importance", height=400, template="plotly_white",
+            )
+            st.plotly_chart(fig_rf, use_container_width=True)
+
+        st.dataframe(
+            feat_imp[['feature', 'lasso_coef', 'rf_importance', 'univariate_r', 'combined_rank']].round(4),
+            use_container_width=True, hide_index=True,
+        )
+
+    # --- Actual vs predicted scatter ---
+    st.markdown('<h3 class="section-hdr">3. Actual vs Predicted Life Expectancy</h3>',
+                unsafe_allow_html=True)
+
+    residual_df['is_bz_label'] = residual_df['iso_code'].apply(
+        lambda x: BZ_NAMES.get(x, '') if x in BZ_NAMES else ''
+    )
+
+    fig_scatter = go.Figure()
+
+    # Non-BZ points
+    for cls, color, symbol in [('overperformer', '#27ae60', 'triangle-up'),
+                                ('as_expected', '#95a5a6', 'circle'),
+                                ('underperformer', '#c0392b', 'triangle-down')]:
+        subset = residual_df[(residual_df['classification'] == cls) &
+                             (~residual_df['iso_code'].isin(BLUE_ZONE_ISOS))]
+        fig_scatter.add_trace(go.Scatter(
+            x=subset['predicted_le'], y=subset['actual_le'],
+            mode='markers', name=f'{cls} ({len(subset)})',
+            marker=dict(color=color, size=8, symbol=symbol, opacity=0.6),
+            text=subset['country_name'],
+            hovertemplate='%{text}<br>Predicted: %{x:.1f}<br>Actual: %{y:.1f}<extra></extra>',
+        ))
+
+    # BZ points
+    bz_rows = residual_df[residual_df['iso_code'].isin(BLUE_ZONE_ISOS)]
+    fig_scatter.add_trace(go.Scatter(
+        x=bz_rows['predicted_le'], y=bz_rows['actual_le'],
+        mode='markers+text', name='Blue Zone countries',
+        marker=dict(color='gold', size=16, symbol='star', line=dict(width=1, color='black')),
+        text=bz_rows['country_name'],
+        textposition='top right', textfont=dict(size=10),
+        hovertemplate='%{text}<br>Predicted: %{x:.1f}<br>Actual: %{y:.1f}<extra></extra>',
+    ))
+
+    # 1:1 line
+    all_vals = list(residual_df['predicted_le']) + list(residual_df['actual_le'])
+    line_min, line_max = min(all_vals) - 2, max(all_vals) + 2
+    fig_scatter.add_trace(go.Scatter(
+        x=[line_min, line_max], y=[line_min, line_max],
+        mode='lines', name='Perfect prediction',
+        line=dict(dash='dash', color='black', width=1),
+    ))
+
+    fig_scatter.update_layout(
+        title="Actual vs Predicted Life Expectancy (LOOCV)<br>"
+              "<sub>Points above the line = overperformers</sub>",
+        xaxis_title="Predicted LE (years)", yaxis_title="Actual LE (years)",
+        height=600, template="plotly_white",
+    )
+    st.plotly_chart(fig_scatter, use_container_width=True)
+
+    # --- World map choropleth ---
+    st.markdown('<h3 class="section-hdr">4. Overperformance World Map</h3>',
+                unsafe_allow_html=True)
+
+    fig_map = px.choropleth(
+        residual_df,
+        locations='iso_code',
+        color='residual',
+        hover_name='country_name',
+        hover_data={'actual_le': ':.1f', 'predicted_le': ':.1f',
+                    'residual': ':.2f', 'classification': True},
+        color_continuous_scale='RdYlGn',
+        color_continuous_midpoint=0,
+        title='Life Expectancy Overperformance (Green = lives longer than predicted)',
+    )
+    fig_map.update_layout(height=450, margin=dict(l=0, r=0, t=40, b=0))
+    st.plotly_chart(fig_map, use_container_width=True)
+
+    # --- Overperformers and underperformers ---
+    col_over, col_under = st.columns(2)
+
+    with col_over:
+        st.markdown('<h3 class="section-hdr">5. Top 15 Overperformers</h3>',
+                    unsafe_allow_html=True)
+        st.markdown("\"Hidden Blue Zone\" candidates -- countries living longer than their "
+                    "indicators predict.")
+        if not hidden_bz.empty:
+            display_over = hidden_bz[['residual_rank', 'country_name', 'is_blue_zone',
+                                       'actual_le', 'predicted_le', 'residual']].copy()
+            display_over.columns = ['Rank', 'Country', 'Known BZ', 'Actual LE',
+                                     'Predicted LE', 'Residual']
+            display_over['Residual'] = display_over['Residual'].apply(lambda x: f"+{x:.1f}")
+            st.dataframe(display_over, use_container_width=True, hide_index=True)
+
+    with col_under:
+        st.markdown('<h3 class="section-hdr">6. Bottom 15 Underperformers</h3>',
+                    unsafe_allow_html=True)
+        st.markdown("Countries living shorter than their indicators predict -- "
+                    "potential areas for public health intervention.")
+        if not underperf.empty:
+            display_under = underperf[['residual_rank', 'country_name', 'is_blue_zone',
+                                        'actual_le', 'predicted_le', 'residual']].copy()
+            display_under.columns = ['Rank', 'Country', 'Known BZ', 'Actual LE',
+                                      'Predicted LE', 'Residual']
+            display_under['Residual'] = display_under['Residual'].apply(lambda x: f"{x:.1f}")
+            st.dataframe(display_under, use_container_width=True, hide_index=True)
+
+    # --- Blue Zone validation ---
+    st.markdown('<h3 class="section-hdr">7. Blue Zone Validation</h3>',
+                unsafe_allow_html=True)
+
+    bz_validation = residual_df[residual_df['iso_code'].isin(BLUE_ZONE_ISOS)].copy()
+    if not bz_validation.empty:
+        display_bz = bz_validation[['country_name', 'actual_le', 'predicted_le',
+                                     'residual', 'residual_zscore', 'residual_rank',
+                                     'classification']].copy()
+        display_bz.columns = ['Country', 'Actual LE', 'Predicted LE', 'Residual',
+                               'Z-score', 'Rank (/93)', 'Classification']
+        st.dataframe(display_bz.round(2), use_container_width=True, hide_index=True)
+
+        bz_mean = bz_validation['residual'].mean()
+        bz_no_usa = bz_validation[bz_validation['iso_code'] != 'USA']
+        n_overperf = (bz_no_usa['classification'] == 'overperformer').sum()
+
+        st.markdown(
+            f"**Validation result:** BZ countries (excl. USA) have a mean residual of "
+            f"**+{bz_no_usa['residual'].mean():.1f} years** and {n_overperf}/{len(bz_no_usa)} "
+            f"are classified as overperformers. The USA ranks {int(bz_validation[bz_validation['iso_code']=='USA']['residual_rank'].values[0])}/93, "
+            f"consistent with the national-level underperformance observed throughout this analysis."
+        )
+
+    # --- Caveats ---
+    st.markdown('<h3 class="section-hdr">8. Caveats</h3>', unsafe_allow_html=True)
+    st.markdown(
+        "- **Small sample (n=93):** Results are exploratory, not definitive\n"
+        "- **Cross-sectional:** No causal claims -- correlation-based pattern detection only\n"
+        "- **Missing features:** Some important indicators (obesity, NCD mortality) were unavailable from the API\n"
+        "- **Country vs region:** Country-level data masks sub-national variation (the Loma Linda problem)\n"
+        "- **Residuals capture both unmeasured factors AND measurement error**\n"
+        "- **\"Hidden Blue Zone\" is a label for statistical overperformance, not a clinical designation**"
+    )
+
+    # --- Feature selection report ---
+    if not feat_sel.empty:
+        with st.expander("Feature Selection Pipeline Details"):
+            st.dataframe(feat_sel, use_container_width=True, hide_index=True)
+
+
+# ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
 def main():
@@ -1246,13 +1483,22 @@ def main():
         "Chow structural break test\n\n"
         "ADF stationarity tests"
     )
+    st.sidebar.markdown("---")
+    st.sidebar.markdown("**ML Prediction**")
+    st.sidebar.markdown(
+        "Ridge, Lasso, ElasticNet\n\n"
+        "Random Forest\n\n"
+        "LOOCV (n=93)\n\n"
+        "Overperformance residuals"
+    )
 
     # --- Main tabs ---
-    tab_pre, tab_full, tab_compare, tab_stats = st.tabs([
+    tab_pre, tab_full, tab_compare, tab_stats, tab_predict = st.tabs([
         "Pre-COVID (1960-2019)",
         "Full Period (1960-2023)",
         "COVID Impact Comparison",
         "Statistical Deep Dive",
+        "Predictive Analysis",
     ])
 
     with tab_pre:
@@ -1269,6 +1515,9 @@ def main():
 
     with tab_stats:
         render_stats_tab()
+
+    with tab_predict:
+        render_prediction_tab()
 
     # Footer
     st.markdown("---")

@@ -1,0 +1,42 @@
+feature,stage_dropped,reason,coverage_pct
+alcohol_per_capita,kept,Passed coverage filter,100.0
+clean_water_access_pct,kept,Passed coverage filter,83.9
+death_rate,kept,Passed coverage filter,100.0
+fertility_rate,kept,Passed coverage filter,100.0
+forest_area_pct,kept,Passed coverage filter,100.0
+gdp_per_capita,kept,Passed coverage filter,100.0
+health_expenditure_pc,kept,Passed coverage filter,100.0
+physicians_per_1000,kept,Passed coverage filter,100.0
+pm25_air_pollution,kept,Passed coverage filter,100.0
+population_65plus_pct,kept,Passed coverage filter,100.0
+population_total,kept,Passed coverage filter,100.0
+urban_population_pct,kept,Passed coverage filter,100.0
+gini_index,kept,Passed coverage filter,87.1
+adult_literacy_rate,kept,Passed coverage filter,54.8
+tertiary_enrollment,kept,Passed coverage filter,89.2
+internet_users_pct,coverage,Only 38.7% non-null (threshold: 50%),38.7
+land_area_km2,kept,Passed coverage filter,61.3
+measles_immunization,kept,Passed coverage filter,100.0
+suicide_rate,kept,Passed coverage filter,100.0
+gni_per_capita,kept,Passed coverage filter,100.0
+mean_temperature,kept,Passed coverage filter,98.9
+mean_elevation,kept,Passed coverage filter,98.9
+abs_latitude,kept,Passed coverage filter,100.0
+population_density,kept,Passed coverage filter,61.3
+female_le_advantage,kept,Passed coverage filter,100.0
+log_gdp_per_capita,kept,Passed coverage filter,100.0
+clean_water_access_pct,correlation,|r|=0.867 with log_gdp_per_capita; lower target corr,
+health_expenditure_pc,correlation,|r|=0.921 with gdp_per_capita; lower target corr,
+gdp_per_capita,correlation,|r|=0.979 with gni_per_capita; lower target corr,
+gni_per_capita,correlation,|r|=0.853 with log_gdp_per_capita; lower target corr,
+mean_temperature,correlation,|r|=0.914 with abs_latitude; lower target corr,
+log_gdp_per_capita,vif,VIF=1203.7 (threshold: 10),
+gini_index,vif,VIF=902.8 (threshold: 10),
+adult_literacy_rate,vif,VIF=251.0 (threshold: 10),
+population_65plus_pct,vif,VIF=70.5 (threshold: 10),
+measles_immunization,vif,VIF=46.0 (threshold: 10),
+death_rate,vif,VIF=30.1 (threshold: 10),
+physicians_per_1000,vif,VIF=26.5 (threshold: 10),
+urban_population_pct,vif,VIF=19.4 (threshold: 10),
+female_le_advantage,vif,VIF=17.0 (threshold: 10),
+alcohol_per_capita,vif,VIF=13.5 (threshold: 10),

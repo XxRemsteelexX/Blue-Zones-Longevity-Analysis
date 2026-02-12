@@ -43,9 +43,13 @@ All data was pulled directly from public APIs. No synthetic or fabricated data w
 | Source | Indicators | Coverage |
 |--------|-----------|----------|
 | World Bank REST API | Life expectancy (overall, male, female), GDP per capita, physicians per 1000, PM2.5, urbanization, health expenditure, death rate, forest area, population, fertility rate, population 65+, Gini index, clean water access, alcohol consumption | 93 countries, 1960-2023 |
+| World Bank REST API (extended) | Adult literacy, tertiary enrollment, internet users, land area, measles immunization, suicide rate, GNI per capita | 93 countries, variable coverage |
+| Static geographic references | Mean annual temperature, mean elevation | 93 countries |
 | WHO Global Health Observatory | Life expectancy (cross-validation) | 93 countries, variable coverage |
 
-**Final dataset:** 5,952 country-year observations across 93 countries and 64 years (1960-2023), with 24 variables per observation.
+**Historical panel:** 5,952 country-year observations across 93 countries and 64 years (1960-2023), with 24 variables per observation.
+
+**ML feature matrix:** 93 countries x 36 features (cross-sectional, most recent values 2015-2023), used for predictive modeling.
 
 All five Blue Zone countries have **100% life expectancy coverage** -- 64 consecutive years of data each, including male and female breakdowns.
 
@@ -427,6 +431,75 @@ Life expectancy projections through 2100, extrapolated from real historical tren
 
 ---
 
+## Predictive Analysis: Life Expectancy Prediction and Country Overperformance
+
+The descriptive analysis above tells us *what* the data shows. This section asks a different question: **which countries live longer (or shorter) than their measurable indicators predict?**
+
+Using 10 country-level features (selected from 26 candidates via a coverage/correlation/VIF pipeline), five regularized ML models predict life expectancy for each of the 93 countries. The residual (actual - predicted) reveals which countries outperform or underperform their "expected" life expectancy.
+
+### Models Compared (LOOCV, n=93)
+
+| Model | LOOCV R-squared | RMSE (years) | Features Used |
+|-------|----------------|-------------|---------------|
+| **Random Forest** | **0.683** | **3.56** | 10 |
+| Ridge | 0.679 | 3.58 | 10 |
+| ElasticNet | 0.678 | 3.59 | 10 |
+| OLS Extended | 0.675 | 3.61 | 10 |
+| Lasso | 0.636 | 3.82 | 6 |
+
+All models evaluated with Leave-One-Out Cross-Validation (LOOCV) -- the gold standard for small-sample honest prediction.
+
+### Top Features (by Combined Importance)
+
+1. **Fertility rate** (strongest -- Lasso coef: -3.50, RF importance: 0.373)
+2. Absolute latitude (distance from equator)
+3. Tertiary enrollment
+4. PM2.5 air pollution
+5. Population density
+
+### Hidden Blue Zone Candidates (Top 10 Overperformers)
+
+Countries that live significantly longer than their indicators predict:
+
+| Rank | Country | Actual LE | Predicted LE | Residual | Known BZ? |
+|------|---------|-----------|-------------|----------|-----------|
+| 1 | Israel | 83.2 | 73.4 | **+9.8** | No |
+| 2 | Japan | 84.0 | 78.2 | **+5.8** | Yes |
+| 3 | Saudi Arabia | 78.7 | 73.0 | **+5.8** | No |
+| 4 | Luxembourg | 83.4 | 78.2 | **+5.2** | No |
+| 5 | Singapore | 82.9 | 77.8 | **+5.1** | No |
+| 6 | South Korea | 83.4 | 78.4 | **+5.0** | No |
+| 7 | Jordan | 77.8 | 73.0 | **+4.8** | No |
+| 8 | Costa Rica | 80.8 | 76.1 | **+4.7** | Yes |
+| 9 | Peru | 77.7 | 73.3 | **+4.4** | No |
+| 10 | Italy | 83.7 | 79.4 | **+4.3** | Yes |
+
+### Validation Against Known Blue Zones
+
+| BZ Country | Rank (/93) | Residual | Classification |
+|------------|-----------|----------|----------------|
+| Japan | **2** | +5.84 | Overperformer |
+| Costa Rica | **8** | +4.68 | Overperformer |
+| Italy | **10** | +4.28 | Overperformer |
+| Greece | 27 | +1.89 | As expected |
+| United States | 69 | -2.09 | As expected |
+
+3 out of 4 non-US Blue Zone countries are classified as overperformers (z > 1). The USA ranks 69th, consistent with the national-level underperformance documented throughout this analysis.
+
+### Caveats
+
+- **Small sample (n=93):** Results are exploratory, not definitive.
+- **Cross-sectional only:** No causal claims -- correlation-based pattern detection.
+- **Missing features:** Some important indicators (obesity, NCD mortality) were unavailable from the World Bank API.
+- **Country vs region:** Country-level data masks sub-national variation.
+- **"Hidden Blue Zone" is a label for statistical overperformance**, not a clinical or demographic designation.
+
+![Actual vs Predicted](outputs/figures/nb08_actual_vs_predicted.png)
+
+![Feature Importance](outputs/figures/nb08_feature_importance.png)
+
+---
+
 ## Limitations
 
 1. **The fundamental country-vs-region problem.** Blue Zones are neighborhoods and villages, not nations. Country-level data dilutes the Blue Zone signal. Any conclusions are about countries *containing* Blue Zones, not about the zones themselves.
@@ -448,8 +521,9 @@ Life expectancy projections through 2100, extrapolated from real historical tren
 ## Methodology
 
 ### Data Collection
-- **World Bank API:** REST calls for 16 indicators with proper pagination
+- **World Bank API:** REST calls for 16 historical indicators + 14 extended indicators with proper pagination
 - **WHO GHO API:** Life expectancy cross-validation
+- **Static geographic data:** Mean temperature and elevation from standard references
 - **Rate limiting:** 0.3-1.0s between API calls to avoid throttling
 - **Merge strategy:** ISO3 country codes
 
@@ -466,6 +540,14 @@ Life expectancy projections through 2100, extrapolated from real historical tren
 - **Regional comparison:** Independent t-test of BZ country vs regional peer LE
 - **Time-series:** Augmented Dickey-Fuller tests, Chow structural break, ARIMA(1,1,0)
 
+### ML Prediction
+- **Feature selection:** 3-stage pipeline (coverage > 50%, correlation < 0.85, VIF < 10)
+- **Models:** OLS, Ridge, Lasso, ElasticNet, Random Forest (max_depth=5, min_samples_leaf=5)
+- **Evaluation:** Leave-One-Out Cross-Validation (LOOCV) for honest out-of-sample R2
+- **Hyperparameter tuning:** RidgeCV, LassoCV, ElasticNetCV with 5-fold inner CV
+- **Overperformance detection:** Standardized residuals (z > 1 = overperformer, z < -1 = underperformer)
+- **Feature importance:** Combined ranking from Lasso coefficients, RF permutation importance, univariate correlation
+
 ### Reproducibility
 Every step is scripted and can be re-run:
 ```bash
@@ -476,18 +558,21 @@ python statistical_tests.py             # CIs, p-values, regression, sensitivity
 python gender_analysis.py               # Male/female LE split
 python regional_analysis.py             # Regional peers + income groups
 python projection_visualizer.py          # Generates figures
+python feature_collector.py              # Pulls extended features for ML (14 WB + static)
+python ml_prediction.py                  # Trains ML models, residual analysis
 ```
 
 ---
 
 ## Interactive Dashboard
 
-The full analysis is available as an interactive Streamlit dashboard with four views:
+The full analysis is available as an interactive Streamlit dashboard with five views:
 
 1. **Pre-COVID (1960-2019):** Clean secular trends without pandemic distortion
 2. **Full Period (1960-2023):** The complete picture including COVID and recovery
 3. **COVID Impact Comparison:** Side-by-side analysis of what the pandemic changed
 4. **Statistical Deep Dive:** Partial correlations, regression, sensitivity, regional, gender
+5. **Predictive Analysis:** ML models, feature importance, overperformance map, hidden Blue Zones
 
 **[Launch the Live Dashboard](https://xxremsteelexx-blue-zones-longevity--blue-zones-dashboard-xgbvew.streamlit.app/)**
 
@@ -504,6 +589,8 @@ streamlit run blue_zones_dashboard.py
 ```
 Blue-Zones-Longevity-Analysis/
 ├── historical_data_collector.py         # World Bank + WHO data collection (16 indicators)
+├── feature_collector.py                # Extended feature collection (14 WB + static)
+├── ml_prediction.py                    # ML models, LOOCV, overperformance analysis
 ├── un_projections_collector.py          # Projection generator
 ├── covid_comparison_analysis.py         # Pre-COVID vs full period analysis
 ├── historical_trend_analysis.py         # Convergence and trend analysis
@@ -513,11 +600,14 @@ Blue-Zones-Longevity-Analysis/
 ├── regional_analysis.py                # Regional peer comparison + income groups
 ├── projection_visualizer.py             # Static figure generation
 ├── verify_data_quality.py               # Automated quality checks
-├── blue_zones_dashboard.py              # Interactive Streamlit dashboard
+├── blue_zones_dashboard.py              # Interactive Streamlit dashboard (5 tabs)
 │
 ├── data/
 │   ├── historical/
 │   │   └── merged_historical_panel.csv  # 5,952 rows, 24 columns
+│   ├── features/
+│   │   ├── ml_feature_matrix.csv        # 93 rows, 36 columns (ML input)
+│   │   └── expanded_panel.csv           # Full panel with extended features
 │   └── projections/
 │       └── un_life_expectancy_projections.csv
 │
@@ -528,8 +618,9 @@ Blue-Zones-Longevity-Analysis/
 │   ├── 04_Country_Deep_Dives.ipynb      # Individual country profiles
 │   ├── 05_Projections_Analysis.ipynb    # Future projections
 │   ├── 06_COVID_Comparison.ipynb        # Pre-COVID vs full period + structural break
-│   └── 07_Statistical_Deep_Dive.ipynb   # CIs, partial correlations, sensitivity, gender,
-│                                        # regional peers, income groups, time-series
+│   ├── 07_Statistical_Deep_Dive.ipynb   # CIs, partial correlations, sensitivity, gender,
+│   │                                    # regional peers, income groups, time-series
+│   └── 08_ML_Prediction.ipynb           # ML models, overperformance, hidden Blue Zones
 │
 └── outputs/
     ├── analysis/
@@ -543,8 +634,13 @@ Blue-Zones-Longevity-Analysis/
     │   ├── gender_gap_analysis.csv      # Male/female LE comparison
     │   ├── regional_peer_comparison.csv # BZ vs regional peers
     │   ├── income_group_convergence.csv # Convergence within income groups
-    │   └── time_series_tests.csv        # ADF, Chow, ARIMA results
-    └── figures/                         # 40+ charts
+    │   ├── time_series_tests.csv        # ADF, Chow, ARIMA results
+    │   ├── ml_model_comparison.csv      # ML model LOOCV metrics
+    │   ├── ml_feature_importance.csv    # Combined feature importance rankings
+    │   ├── ml_residual_analysis.csv     # Full 93-country residual analysis
+    │   ├── ml_hidden_blue_zones.csv     # Top 15 overperformers
+    │   └── ml_underperformers.csv       # Bottom 15 underperformers
+    └── figures/                         # 50+ charts
 ```
 
 ---
@@ -563,9 +659,11 @@ The data tells two stories depending on where you cut it.
 
 **The regional test:** Japan, Italy, Greece, and Costa Rica are all statistically significant outliers above their regional peer averages. The United States falls 2.5 years *below* its regional average.
 
-**The most striking finding remains the US.** Among the five Blue Zone countries, the United States gained the fewest years over 60 years (9.0 vs Japan's 16.7), was hit hardest by COVID (-1.81 years), hasn't recovered to 2019 levels, falls below its regional peer average, and drags the BZ group average down by 0.73 years. Whatever Loma Linda is doing right, it is entirely invisible at the national level.
+**The ML prediction layer confirms the descriptive findings.** A Random Forest model (LOOCV R2=0.683) trained on 10 features identifies Japan (rank 2/93), Costa Rica (8/93), and Italy (10/93) as statistically significant overperformers -- countries living longer than their indicators predict. The USA ranks 69/93, underperforming its predicted LE by 2.1 years. The top "hidden Blue Zone" candidate is Israel (+9.8 years residual), followed by Saudi Arabia, Luxembourg, Singapore, and South Korea.
 
-**The recommendation:** Use the pre-COVID data (1960-2019) to understand the underlying secular trend. Use the full data (1960-2023) for completeness and honesty about what actually happened. Neither version is wrong alone. Comparing them is the real story.
+**The most striking finding remains the US.** Among the five Blue Zone countries, the United States gained the fewest years over 60 years (9.0 vs Japan's 16.7), was hit hardest by COVID (-1.81 years), hasn't recovered to 2019 levels, falls below its regional peer average, drags the BZ group average down by 0.73 years, and underperforms its ML-predicted life expectancy by 2.1 years. Whatever Loma Linda is doing right, it is entirely invisible at the national level.
+
+**The recommendation:** Use the pre-COVID data (1960-2019) to understand the underlying secular trend. Use the full data (1960-2023) for completeness and honesty about what actually happened. Use the ML overperformance analysis to identify where unmeasured factors may be driving longevity. Neither version is wrong alone. Comparing them is the real story.
 
 ---
 

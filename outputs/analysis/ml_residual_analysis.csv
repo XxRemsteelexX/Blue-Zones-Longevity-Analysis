@@ -1,0 +1,94 @@
+iso_code,country_name,is_blue_zone,actual_le,predicted_le,residual,residual_zscore,classification,residual_rank
+ISR,Israel,0,83.1951219512195,73.39,9.81,2.755,overperformer,1
+JPN,Japan,1,84.0412195121951,78.2,5.84,1.646,overperformer,2
+SAU,Saudi Arabia,0,78.732,72.97,5.76,1.625,overperformer,3
+LUX,Luxembourg,0,83.3585365853659,78.19,5.17,1.459,overperformer,4
+SGP,Singapore,0,82.8951219512195,77.81,5.09,1.437,overperformer,5
+KOR,South Korea,0,83.4292682926829,78.44,4.99,1.411,overperformer,6
+JOR,Jordan,0,77.814,72.98,4.83,1.366,overperformer,7
+CRI,Costa Rica,1,80.799,76.12,4.68,1.323,overperformer,8
+PER,Peru,0,77.74,73.32,4.42,1.25,overperformer,9
+ITA,Italy,1,83.7,79.42,4.28,1.21,overperformer,10
+DZA,Algeria,0,76.261,72.01,4.25,1.204,overperformer,11
+AUS,Australia,0,83.0512195121951,78.86,4.19,1.187,overperformer,12
+FRA,France,0,82.9292682926829,79.39,3.53,1.003,overperformer,13
+SVN,Slovenia,0,81.9780487804878,78.53,3.45,0.98,as_expected,14
+CHE,Switzerland,0,84.0560975609756,80.63,3.42,0.972,as_expected,15
+ESP,Spain,0,83.8829268292683,80.54,3.34,0.949,as_expected,16
+CHL,Chile,0,81.167,78.2,2.97,0.845,as_expected,17
+BGD,Bangladesh,0,74.672,71.97,2.7,0.77,as_expected,18
+COL,Colombia,0,77.725,75.34,2.38,0.682,as_expected,19
+SWE,Sweden,0,83.309756097561,80.95,2.36,0.676,as_expected,20
+IRN,Iran,0,77.654,75.35,2.3,0.659,as_expected,21
+ISL,Iceland,0,82.6073170731707,80.33,2.28,0.652,as_expected,22
+LBN,Lebanon,0,77.817,75.55,2.27,0.651,as_expected,23
+IRL,Ireland,0,82.8609756097561,80.71,2.16,0.618,as_expected,24
+BEL,Belgium,0,82.3975609756098,80.24,2.16,0.619,as_expected,24
+NZL,New Zealand,0,83.0048780487805,81.01,1.99,0.573,as_expected,26
+GRC,Greece,1,81.5365853658537,79.64,1.89,0.545,as_expected,27
+NOR,Norway,0,83.1121951219512,81.4,1.71,0.495,as_expected,28
+VNM,Vietnam,0,74.588,72.9,1.69,0.488,as_expected,29
+ECU,Ecuador,0,77.392,75.82,1.57,0.455,as_expected,30
+ALB,Albania,0,79.602,78.27,1.33,0.388,as_expected,31
+AUT,Austria,0,81.5414634146342,80.27,1.27,0.372,as_expected,32
+THA,Thailand,0,76.412,75.16,1.25,0.366,as_expected,33
+NLD,Netherlands,0,81.9146341463415,80.73,1.19,0.347,as_expected,34
+MYS,Malaysia,0,76.657,75.53,1.13,0.332,as_expected,35
+MEX,Mexico,0,75.069,74.01,1.06,0.312,as_expected,36
+MAR,Morocco,0,75.313,74.27,1.04,0.308,as_expected,37
+TUN,Tunisia,0,76.508,75.55,0.96,0.284,as_expected,38
+TZA,Tanzania,0,66.995,66.05,0.94,0.279,as_expected,39
+IRQ,Iraq,0,72.324,71.41,0.91,0.271,as_expected,40
+FIN,Finland,0,81.6853658536585,80.83,0.86,0.256,as_expected,41
+PRT,Portugal,0,82.2804878048781,81.49,0.79,0.237,as_expected,42
+CAN,Canada,0,81.6465853658537,80.92,0.73,0.22,as_expected,43
+DNK,Denmark,0,81.8536585365854,81.19,0.66,0.201,as_expected,44
+UGA,Uganda,0,68.252,67.66,0.59,0.181,as_expected,45
+BIH,Bosnia and Herzegovina,0,77.85,77.37,0.48,0.15,as_expected,46
+PRY,Paraguay,0,73.844,73.44,0.4,0.129,as_expected,47
+GBR,United Kingdom,0,81.2380975609756,80.91,0.32,0.107,as_expected,48
+MNE,Montenegro,0,77.5878048780488,77.48,0.11,0.046,as_expected,49
+BRA,Brazil,0,75.848,75.89,-0.04,0.005,as_expected,50
+SVK,Slovakia,0,78.0170731707317,78.13,-0.11,-0.016,as_expected,51
+CZE,Czech Republic,0,79.8780487804878,80.14,-0.27,-0.058,as_expected,52
+PAK,Pakistan,0,67.649,67.94,-0.29,-0.064,as_expected,53
+VEN,Venezuela,0,72.514,73.02,-0.51,-0.125,as_expected,54
+HRV,Croatia,0,78.4731707317073,79.04,-0.57,-0.142,as_expected,55
+BWA,Botswana,0,69.163,69.88,-0.71,-0.183,as_expected,56
+IND,India,0,72.003,72.71,-0.71,-0.183,as_expected,56
+EGY,Egypt,0,71.633,72.42,-0.79,-0.204,as_expected,58
+CHN,China,0,77.953,78.81,-0.86,-0.224,as_expected,59
+ETH,Ethiopia,0,67.315,68.24,-0.92,-0.241,as_expected,60
+DEU,Germany,0,80.5414634146342,81.53,-0.99,-0.26,as_expected,61
+TUR,Turkey,0,77.156,78.34,-1.19,-0.315,as_expected,62
+POL,Poland,0,78.5073170731707,79.87,-1.36,-0.363,as_expected,63
+ROU,Romania,0,76.6073170731707,78.19,-1.58,-0.425,as_expected,64
+EST,Estonia,0,78.490243902439,80.41,-1.92,-0.519,as_expected,65
+NAM,Namibia,0,67.385,69.37,-1.98,-0.537,as_expected,66
+URY,Uruguay,0,78.138,80.13,-1.99,-0.539,as_expected,67
+SYR,Syria,0,72.12,74.13,-2.01,-0.545,as_expected,68
+ARG,Argentina,0,77.395,79.48,-2.09,-0.567,as_expected,69
+USA,United States,1,78.3853658536585,80.47,-2.09,-0.566,as_expected,69
+IDN,Indonesia,0,71.146,73.26,-2.12,-0.575,as_expected,71
+MKD,North Macedonia,0,75.3160975609756,77.48,-2.17,-0.589,as_expected,72
+ZMB,Zambia,0,66.349,68.59,-2.24,-0.61,as_expected,73
+HUN,Hungary,0,76.7707317073171,79.34,-2.57,-0.703,as_expected,74
+SRB,Serbia,0,76.2209756097561,78.81,-2.59,-0.707,as_expected,75
+GHA,Ghana,0,65.498,68.13,-2.64,-0.72,as_expected,76
+BGR,Bulgaria,0,75.7073170731707,78.85,-3.14,-0.862,as_expected,77
+BOL,Bolivia,0,68.581,71.74,-3.16,-0.865,as_expected,78
+MOZ,Mozambique,0,63.611,67.28,-3.67,-1.008,underperformer,79
+LTU,Lithuania,0,76.9878048780488,80.69,-3.7,-1.017,underperformer,80
+LBY,Libya,0,69.339,73.25,-3.91,-1.077,underperformer,81
+PHL,Philippines,0,69.833,73.91,-4.07,-1.121,underperformer,82
+KEN,Kenya,0,63.646,67.77,-4.13,-1.137,underperformer,83
+AFG,Afghanistan,0,66.035,70.39,-4.36,-1.202,underperformer,84
+LVA,Latvia,0,75.6780487804878,80.1,-4.42,-1.219,underperformer,85
+MMR,Myanmar,0,66.889,71.35,-4.47,-1.231,underperformer,86
+ZWE,Zimbabwe,0,62.775,67.75,-4.97,-1.372,underperformer,87
+PNG,Papua New Guinea,0,66.134,71.18,-5.04,-1.392,underperformer,88
+MDG,Madagascar,0,63.632,68.78,-5.14,-1.42,underperformer,89
+ZAF,South Africa,0,66.139,73.68,-7.54,-2.089,underperformer,90
+FJI,Fiji,0,67.316,74.92,-7.6,-2.107,underperformer,91
+RUS,Russia,0,73.2546341463415,80.87,-7.61,-2.11,underperformer,92
+NGA,Nigeria,0,54.462,69.16,-14.7,-4.089,underperformer,93
