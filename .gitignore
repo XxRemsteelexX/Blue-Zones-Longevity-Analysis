@@ -70,6 +70,9 @@ jupyter_config/
 !data/historical/*.csv
 !data/projections/*.csv
 !outputs/analysis/*.csv
+!outputs/analysis/pre_covid/*.csv
+!outputs/analysis/full_period/*.csv
+!outputs/analysis/covid_comparison/*.csv
 
 # Generated outputs
 outputs/data/
