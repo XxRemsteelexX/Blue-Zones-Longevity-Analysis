@@ -123,6 +123,8 @@ COUNTRY_COORDS = {
 # World Bank indicators to pull
 WB_INDICATORS = {
     'SP.DYN.LE00.IN': 'life_expectancy',
+    'SP.DYN.LE00.MA.IN': 'life_expectancy_male',
+    'SP.DYN.LE00.FE.IN': 'life_expectancy_female',
     'NY.GDP.PCAP.CD': 'gdp_per_capita',
     'SH.MED.PHYS.ZS': 'physicians_per_1000',
     'SP.URB.TOTL.IN.ZS': 'urban_population_pct',
@@ -131,6 +133,11 @@ WB_INDICATORS = {
     'SH.XPD.CHEX.PC.CD': 'health_expenditure_pc',
     'SP.DYN.CDRT.IN': 'death_rate',
     'AG.LND.FRST.ZS': 'forest_area_pct',
+    'SP.DYN.TFRT.IN': 'fertility_rate',
+    'SP.POP.65UP.TO.ZS': 'population_65plus_pct',
+    'SI.POV.GINI': 'gini_index',
+    'SH.H2O.SMDW.ZS': 'clean_water_access_pct',
+    'SH.ALC.PCAP.LI': 'alcohol_per_capita',
 }
 
 # Valid ISO codes for filtering World Bank responses (exclude aggregates)
