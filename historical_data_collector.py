@@ -313,7 +313,7 @@ def fetch_who_historical(session):
 
 
 def add_country_metadata(df):
-    """Add country name, blue zone flag, coordinates, and gravity calculations."""
+    """Add country name, blue zone flag, and coordinates."""
     df = df.copy()
 
     # Map ISO to country name
@@ -326,14 +326,6 @@ def add_country_metadata(df):
     # Coordinates
     df['latitude'] = df['iso_code'].map(lambda x: COUNTRY_COORDS.get(x, (None, None))[0])
     df['longitude'] = df['iso_code'].map(lambda x: COUNTRY_COORDS.get(x, (None, None))[1])
-
-    # Gravity calculation (International Gravity Formula IGF 1980)
-    lat_rad = np.radians(df['latitude'].astype(float))
-    df['effective_gravity'] = 9.78033 * (
-        1 + 0.0053024 * np.sin(lat_rad)**2
-        - 0.0000058 * np.sin(2 * lat_rad)**2
-    )
-    df['gravity_deviation'] = df['effective_gravity'] - 9.80665
 
     return df
 
@@ -408,7 +400,7 @@ def main():
     print("\nDATA COMPLETENESS (% of country-year rows with non-null values):")
     data_cols = [c for c in df_merged.columns if c not in [
         'iso_code', 'year', 'country_name', 'is_blue_zone', 'blue_zone_region',
-        'latitude', 'longitude', 'effective_gravity', 'gravity_deviation'
+        'latitude', 'longitude'
     ]]
     for col in data_cols:
         pct = (1 - df_merged[col].isna().mean()) * 100
