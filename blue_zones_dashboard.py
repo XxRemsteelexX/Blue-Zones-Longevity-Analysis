@@ -47,6 +47,7 @@ BZ_COLORS = {
     "USA": "#E74C3C", "JPN": "#3498DB", "ITA": "#2ECC71",
     "GRC": "#9B59B6", "CRI": "#F39C12",
 }
+BLUE_ZONE_ISOS = set(BZ_COLORS.keys())
 BZ_NAMES = {
     "USA": "United States (Loma Linda)",
     "JPN": "Japan (Okinawa)",
